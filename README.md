@@ -1,6 +1,6 @@
 # Growth Marketing Playbooks
 
-**A curated set of growth marketing playbooks covering DevRel, developer marketing, and community growth strategies — created from hands-on experience working with some of the fastest-growing AI and code review companies, including [Kubiya.ai](https://www.kubiya.ai/), [Qodo](https://qodo.ai/), [Aviator](https://aviator.co/), and [Scalekit](https://www.scalekit.com/).**
+**A curated set of growth marketing playbooks covering DevRel, developer marketing, and community growth strategies — created from hands-on experience working with some of the fastest-growing AI and code review companies, including Kubiya.ai, Qodo ,Aviator, Scalekit and many more early stage B2B AI startups.**
 
 ---
 
@@ -31,21 +31,21 @@ They’ve been tested with venture-backed startups in AI infrastructure, code re
 
 ---
 
-## 🚀 How to Use
+## How to Use
 1. Browse the folders for the platform or GTM motion you’re targeting.
 2. Adapt the strategy docs to your product, audience, and budget.
 3. Measure results — most playbooks include KPIs and metrics to track.
 
 ---
 
-## 🛠 Contributing
+## Contributing
 We welcome contributions!
 - Submit PRs to add new playbooks or improve existing ones.
 - Open an issue to request a new channel or GTM tactic.
 
 ---
 
-## 📜 License
+##  License
 This project is licensed under the [MIT License](./LICENSE) — free to use, adapt, and share.
 
 ---
