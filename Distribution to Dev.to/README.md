@@ -48,11 +48,37 @@ Flags:
 - `--banner-base-url` Base URL to serve generated banners (e.g., `http://localhost:5000/static/banners`). Optional if you use GitHub uploads (see below).
 
 Optional env:
-- `BANNER_PROVIDER` Banner provider: `local` (default) or `gemini`.
-- `GEMINI_IMAGE_MODEL` Override the image model (default: `gemini-2.0-flash-exp-image-generation`).
+- `BANNER_PROVIDER` Banner provider: `local` (default), `openai`, or `auto` (`auto` tries OpenAI then falls back to local).
+- `OPENAI_IMAGE_MODEL` Override the image model used for OpenAI image generation (default: `dall-e-3`).
 - `BANNER_UPLOAD_PROVIDER` Where to host generated banners when `BANNER_BASE_URL` is not set. Supported: `github`.
 - `GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH`, `GITHUB_PATH_PREFIX` Used when `BANNER_UPLOAD_PROVIDER=github`.
 - `--publish` Actually publish; without it, the script only prints the payloads.
+
+## Environment variables
+
+Required:
+- `OPENAI_API_KEY` — API key used by the summarizer and (optionally) OpenAI image generation.
+- `DEVTO_API_KEY` — Dev.to API key used to publish articles.
+
+Common optional environment variables (examples also present in `.env.example`):
+- `BANNER_PROVIDER` — `local` (default), `openai`, or `auto` (try `openai` then `local`).
+- `OPENAI_IMAGE_MODEL` — model identifier for OpenAI image requests (default: `dall-e-3`).
+- `OPENAI_IMAGE_SIZE` — requested image size for OpenAI (e.g., `1024x1024`, `1792x1024`).
+- `BANNER_OUTPUT_SIZE` — final center-cropped output size for banners (e.g., `1000x420`).
+- `BANNER_DUMP_JSON` — optional path to save the OpenAI image response JSON for debugging.
+- `BANNER_CAPTION` — optional caption text rendered onto generated banners (falls back to the company blurb).
+- `BANNER_BASE_URL` — base URL where generated banners are served (e.g., `http://127.0.0.1:5000/static/banners`). If empty, the script may upload generated banners.
+- `BANNER_UPLOAD_PROVIDER` — where to host generated banners when `BANNER_BASE_URL` is empty (supported: `github`).
+- `GITHUB_TOKEN` — fine-grained token with Contents: Read and write (used when `BANNER_UPLOAD_PROVIDER=github`).
+- `GITHUB_REPO` — repo in the form `owner/repo` to upload banners to (public repo recommended).
+- `GITHUB_BRANCH` — branch to commit uploads to (default: `main`).
+- `GITHUB_PATH_PREFIX` — folder prefix inside the repo to place uploaded banners (default: `banners`).
+- `INLINE_BANNER` — `1`/`true` to embed an inline `![Banner](url)` image in the markdown preview.
+- `PRIMARY_KEYWORD` — optional SEO keyword the summarizer will try to include in the Introduction and one H2.
+- `DEVTO_COMPANY_BLURB` — override the default company blurb appended to published posts.
+- `CANONICAL_URL` — optional default canonical URL if not provided via CLI.
+
+Tip: copy `Distribution to Dev.to/.env.example` to `.env` and fill the required keys before running the CLI or web UI.
 
 Structure the model produces (aligned to checklist, ~800–1000 words total):
 
