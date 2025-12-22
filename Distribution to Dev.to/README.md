@@ -1,4 +1,4 @@
-# Blog multi-publisher helper
+# Distribution to Dev.to
 
 This repo shows a minimal Python script that:
 
