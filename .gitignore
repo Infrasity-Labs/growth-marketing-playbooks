@@ -53,7 +53,6 @@ dist/
 *.sublime-workspace
 
 # outputs and caches
-outputs/
 .cache/
 
 # macOS
