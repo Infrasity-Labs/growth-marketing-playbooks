@@ -35,13 +35,11 @@ jobs:
           cat > "Distribution to Dev.to/.env" <<'EOF'
 OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
 DEVTO_API_KEY=${{ secrets.DEVTO_API_KEY }}
-RUN_PUBLISH=${{ secrets.RUN_PUBLISH }}
-POST_DELAY_SECONDS=${{ secrets.POST_DELAY_SECONDS }}
-BANNER_BASE_URL=${{ secrets.BANNER_BASE_URL }}
 BANNER_UPLOAD_PROVIDER=${{ secrets.BANNER_UPLOAD_PROVIDER }}
 GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
 GITHUB_REPO=${{ secrets.GITHUB_REPO }}
-BANNER_PROMPT_STYLE=${{ secrets.BANNER_PROMPT_STYLE }}
+GITHUB_BRANCH=${{ secrets.GITHUB_BRANCH }}
+GITHUB_PATH_PREFIX=${{ secrets.GITHUB_PATH_PREFIX }}
 EOF
 
       - name: Run runner (from JSON)
