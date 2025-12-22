@@ -59,7 +59,8 @@ jobs:
           echo "next_index=$((last + 1))" >> "$GITHUB_OUTPUT"
 
       - name: Debug index
-        run: echo "Next index: ${{ steps.next_index.outputs.next_index }}"
+        run: |
+          echo "Next index: ${{ steps.next_index.outputs.next_index }}"
 
       - name: Run daily runner
         id: run_step
