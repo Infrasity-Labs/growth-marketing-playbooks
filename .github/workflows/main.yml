@@ -2,16 +2,7 @@ name: Daily Runner
 
 on:
   schedule:
-    # Daily at 02:30 UTC (adjust as needed)
-    - cron: '30 2 * * *'
-  workflow_dispatch:
-
-# Permissions required so the job can commit/push state back to the repository
-name: Daily Runner
-
-on:
-  schedule:
-    # Daily at 02:30 UTC (adjust as needed)
+    # Daily at 02:30 UTC
     - cron: '30 2 * * *'
   workflow_dispatch:
 
@@ -22,6 +13,7 @@ permissions:
 jobs:
   run:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -95,7 +87,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No state changes to commit"
           else
-            git commit -m "Update last processed index" || true
+            git commit -m "Update last processed index"
             git push
           fi
 
