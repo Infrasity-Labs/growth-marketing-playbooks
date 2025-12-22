@@ -33,14 +33,14 @@ jobs:
         run: |
           mkdir -p "Distribution to Dev.to"
           cat > "Distribution to Dev.to/.env" <<'EOF'
-OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
-DEVTO_API_KEY=${{ secrets.DEVTO_API_KEY }}
-BANNER_UPLOAD_PROVIDER=${{ secrets.BANNER_UPLOAD_PROVIDER }}
-GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
-GITHUB_REPO=${{ secrets.GITHUB_REPO }}
-GITHUB_BRANCH=${{ secrets.GITHUB_BRANCH }}
-GITHUB_PATH_PREFIX=${{ secrets.GITHUB_PATH_PREFIX }}
-EOF
+          OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}
+          DEVTO_API_KEY=${{ secrets.DEVTO_API_KEY }}
+          BANNER_UPLOAD_PROVIDER=${{ secrets.BANNER_UPLOAD_PROVIDER }}
+          GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPO=${{ secrets.GITHUB_REPO }}
+          GITHUB_BRANCH=${{ secrets.GITHUB_BRANCH }}
+          GITHUB_PATH_PREFIX=${{ secrets.GITHUB_PATH_PREFIX }}
+          EOF
 
       - name: Run runner (from JSON)
         id: run_step

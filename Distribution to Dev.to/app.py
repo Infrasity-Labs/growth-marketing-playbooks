@@ -391,7 +391,7 @@ def _generate_openai_banner_file(prompt: str) -> pathlib.Path:
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY missing for OpenAI image generation.")
 
-    model = (os.getenv("OPENAI_IMAGE_MODEL") or "dall-e-3").strip()
+    model = (os.getenv("OPENAI_IMAGE_MODEL") or "gpt-image-1-mini").strip()
     requested_size = (os.getenv("OPENAI_IMAGE_SIZE") or "1024x1024").strip()
     supported_sizes = {"1024x1024", "1024x1792", "1792x1024"}
     if requested_size not in supported_sizes:
