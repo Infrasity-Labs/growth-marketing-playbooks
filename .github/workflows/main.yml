@@ -2,11 +2,9 @@ name: Daily Runner
 
 on:
   schedule:
-    # Daily at 02:30 UTC
     - cron: '30 2 * * *'
   workflow_dispatch:
 
-# Permissions required so the job can commit/push state back to the repository
 permissions:
   contents: write
 
@@ -32,7 +30,6 @@ jobs:
           pip install -r "Distribution to Dev.to/requirements.txt"
 
       - name: Create .env from secrets
-        shell: bash
         run: |
           mkdir -p "Distribution to Dev.to"
           cat > "Distribution to Dev.to/.env" <<'EOF'
@@ -54,7 +51,7 @@ jobs:
         run: |
           mkdir -p state
           if [ -f state/last_index.txt ]; then
-            last=$(cat state/last_index.txt | tr -d '\n') || last=0
+            last=$(cat state/last_index.txt | tr -d '\n')
             if ! [[ "$last" =~ ^[0-9]+$ ]]; then
               last=0
             fi
@@ -62,7 +59,7 @@ jobs:
             last=0
           fi
           next=$((last + 1))
-          echo "next_index=$next" >> $GITHUB_OUTPUT
+          echo "next_index=$next" >> "$GITHUB_OUTPUT"
 
       - name: Debug: print chosen index
         run: echo "Next index (1-based): ${{ steps.next_index.outputs.next_index }}"
@@ -76,14 +73,13 @@ jobs:
           python -u daily_runner.py
 
       - name: Commit updated state back to repo
-        if: ${{ steps.run_step.outcome == 'success' }}
-        shell: bash
+        if: steps.run_step.outcome == 'success'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           mkdir -p state
           echo "${{ steps.next_index.outputs.next_index }}" > state/last_index.txt
-          git add state/last_index.txt || true
+          git add state/last_index.txt
           if git diff --cached --quiet; then
             echo "No state changes to commit"
           else
@@ -96,4 +92,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: daily-runner-outputs-${{ github.run_id }}
-          path: "Distribution to Dev.to/outputs"
+          path: Distribution to Dev.to/outputs
