@@ -36,10 +36,13 @@ jobs:
           GITHUB_BRANCH=${{ secrets.GITHUB_BRANCH }}
           GITHUB_PATH_PREFIX=${{ secrets.GITHUB_PATH_PREFIX }}
           EOF
+          # Ensure a safe default: do not publish by default
+          grep -q '^RUN_PUBLISH' "Distribution to Dev.to/.env" || echo "RUN_PUBLISH=false" >> "Distribution to Dev.to/.env"
 
       - name: Run runner (from JSON)
         id: run_step
         run: |
+          mkdir -p "Distribution to Dev.to/outputs"
           cd "Distribution to Dev.to"
           python -u run_from_json.py
 
