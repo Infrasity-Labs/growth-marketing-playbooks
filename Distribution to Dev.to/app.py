@@ -913,13 +913,14 @@ def main() -> None:
     if blurb and blurb not in summary_md:
         summary_md = summary_md.rstrip() + "\n\n---\n\n## About Infrasity\n\n" + blurb
 
-    devto_key = os.getenv("DEVTO_API_KEY")
-    if not devto_key:
-        raise RuntimeError("DEVTO_API_KEY missing.")
     if args.publish:
+        devto_key = os.getenv("DEVTO_API_KEY")
+        if not devto_key:
+            raise RuntimeError("DEVTO_API_KEY missing (required when --publish is set).")
         devto_resp = post_devto(devto_key, title, summary_md, tags, publish=True, canonical_url=canonical_url)
         print("Dev.to published:", devto_resp.get("url", devto_resp))
     else:
+        # Dry-run mode: do not require DEVTO_API_KEY
         print("[dry-run] Dev.to payload ready (not sent).")
 
     print("Summary ready.\n---\n")
