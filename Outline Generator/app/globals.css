@@ -1,0 +1,422 @@
+html, body {
+  background: #000 !important;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.input-field {
+  @apply p-2 border-2 border-primary outline-none text-primary placeholder-secondary placeholder-opacity-70 rounded-md;
+}
+
+.main-heading{
+  @apply bg-custom-gradient bg-clip-text text-transparent font-bold text-4xl;
+}
+
+.custom-text-gradient {
+  @apply bg-text-gradient bg-clip-text text-transparent
+}
+
+.btn{
+  @apply bg-primary text-white rounded-md p-2 flex items-center justify-center hover:bg-secondary;
+}
+
+.btn-secondary {
+  @apply bg-white text-text-primary border border-text-primary rounded-xl p-2 flex items-center justify-center hover:bg-gray-100 transition-all;
+}
+
+.input-cus {
+  @apply border border-text-primary outline-none text-text-primary rounded-xl p-2 w-full;
+}
+
+.sidebar-elements{
+  @apply font-semibold flex items-center gap-2 p-2 rounded-lg cursor-pointer hover:bg-secondary-light bg-black shadow transition-all duration-150 ease-in-out;
+}
+
+.sidebar-elements-active{
+  @apply font-semibold flex items-center gap-2 bg-primary p-2 rounded-lg text-white cursor-pointer;
+}
+
+.outline-gen-input{
+  @apply px-2 border-2 rounded-xl border-text-primary outline-none w-full p-[0.57rem] ;
+}
+
+.outline-gen-input-disabled{
+  @apply px-2 border-2 rounded-xl border-gray-500 outline-none w-full p-[0.57rem] ;
+}
+
+
+.cus-line {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #262626;
+  font-size: 0.875rem;
+}
+
+.cus-line::before,
+.cus-line::after {
+  content: '';
+  flex-grow: 1;
+  background: #262626;
+  height: 1px;
+  margin: 0 12px;
+}
+
+.dropdown-enter {
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+}
+
+.dropdown-enter-active {
+  max-height: 22rem;
+  opacity: 1;
+}
+
+.dropdown-exit {
+  max-height: 22rem;
+  opacity: 1;
+  transition: max-height 0.3s ease-in, opacity 0.3s ease-in;
+}
+
+.dropdown-exit-active {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Target Audience styles */
+.react-tags {
+  position: relative;
+  padding: 0.25rem 0 0 0.25rem;
+  border: 2px solid #262626;
+  border-radius: 0.75rem;
+  background: #ffffff;
+  /* shared font styles */
+  font-size: 1rem;
+  line-height: 1.2;
+  /* clicking anywhere will focus the input */
+  cursor: text;
+}
+
+.react-tags.is-active {
+  border-color: #262626;
+}
+
+.react-tags.is-disabled {
+  /* opacity: 0.75; */
+  background-color: #fafafa;
+  /* Prevent any clicking on the component */
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.react-tags.is-invalid {
+  border-color: #fd5956;
+  box-shadow: 0 0 0 2px rgba(253, 86, 83, 0.25);
+}
+
+.react-tags__label {
+  position: absolute;
+  left: -10000px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.react-tags__list {
+  /* Do not use display: contents, it's too buggy */
+  display: inline;
+  padding: 0;
+}
+
+.react-tags__list-item {
+  display: inline;
+  list-style: none;
+}
+
+.react-tags__tag_custom{
+  margin: 0 0.25rem 0.25rem 0;
+  padding: 0.375rem 0.5rem;
+  border: 0;
+  border-radius: 10px;
+  background: #F4F4F4;
+  color: #262626;
+  /* match the font styles */
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.react-tags__tag {
+  margin: 0 0.25rem 0.25rem 0;
+  padding: 0.375rem 0.5rem;
+  border: 0;
+  border-radius: 10px;
+  background: #F4F4F4;
+  color: #262626;
+  /* match the font styles */
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.react-tags__tag:hover {
+  /* color: #ffffff; */
+  background-color: #E7E7E7;
+}
+
+/* cross icon */
+.react-tags__tag::after {
+  /* background: url(/public/icons/remove-tag-icon.svg); */
+  content: '';
+  display: inline-block;
+  width: 0.65rem;
+  height: 0.65rem;
+  clip-path: polygon(10% 0, 0 10%, 40% 50%, 0 90%, 10% 100%, 50% 60%, 90% 100%, 100% 90%, 60% 50%, 100% 10%, 90% 0, 50% 40%);
+  margin-left: 0.5rem;
+  font-size: 0.875rem;
+  background-color: #262626;
+  border-radius: 50%;
+}
+
+/* .react-tags__tag:hover::after {
+  background-color: #ffffff;
+} */
+
+.react-tags__combobox {
+  display: inline-block;
+  /* match tag layout */
+  padding: 0.375rem 0.25rem;
+  margin-bottom: 0.25rem;
+  /* prevents autoresize overflowing the container */
+  max-width: 100%;
+}
+
+.react-tags__combobox-input {
+  /* prevent autoresize overflowing the container */
+  max-width: 100%;
+  /* remove styles and layout from this element */
+  margin: 0;
+  padding: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  /* match the font styles */
+  font-size: inherit;
+  line-height: inherit;
+}
+
+.react-tags__combobox-input::placeholder {
+  color: #9CA3AF;
+  opacity: 1;
+}
+
+.react-tags__listbox {
+  position: absolute;
+  z-index: 1;
+  top: calc(100% + 5px);
+  /* Negate the border width on the container */
+  left: -2px;
+  right: -2px;
+  max-height: 12.5rem;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #afb8c1;
+  border-radius: 6px;
+  box-shadow: rgba(0, 0, 0, 0.1) 0 10px 15px -4px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+}
+
+.react-tags__listbox-option {
+  padding: 0.375rem 0.5rem;
+}
+
+.react-tags__listbox-option:hover {
+  cursor: pointer;
+  background: #eaeef2;
+}
+
+/* .react-tags__listbox-option:not([aria-disabled='true']).is-active {
+  background: #4f46e5;
+  color: #ffffff;
+} */
+
+.react-tags__listbox-option[aria-disabled='true'] {
+  color: #7c7d86;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.react-tags__listbox-option[aria-selected='true']::after {
+  content: '✓';
+  margin-left: 0.5rem;
+}
+
+/* .react-tags__listbox-option[aria-selected='true']:not(.is-active)::after {
+  color: #4f46e5;
+} */
+
+.react-tags__listbox-option-highlight {
+  background-color: #ffdd00;
+}
+
+
+/* select {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding: 0.54rem;
+} */
+
+
+td[colspan="2"] {     /* Target cells that span 2 columns */
+  width: 100%;       /* Make them take up all available space */
+}
+
+.center {
+  width: 100px;
+  height: 100px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.circle {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* background-color: #fff4
+  border: 2px solid #fff; */
+  border-radius: 50%;
+  overflow: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform: translate3d(0, 0, 0);
+  cursor: pointer;
+}
+.wave {
+  background-color: #6c5be7;
+  position: absolute;
+  top: 110%;
+  height: 200%;
+  width: 200%;
+  border-radius: 38%;
+  left: -50%;
+  animation: fill 40s cubic-bezier(0.7, 0, 0.3, 1) forwards, wave 7s linear infinite;
+}
+
+.wave2 {
+  background-color: #4C40A7;
+  position: absolute;
+  top: 110%;
+  height: 200%;
+  width: 200%;
+  border-radius: 38%;
+  left: -50%;
+  animation: fill 40s cubic-bezier(0.7, 0, 0.3, 1) forwards, wave2 5s linear infinite;
+}
+
+.wave3 {
+  background-color: #3a2c7f;
+  position: absolute;
+  top: 110%;
+  height: 200%;
+  width: 200%;
+  border-radius: 38%;
+  left: -50%;
+  animation: fill 60s cubic-bezier(0.7, 0, 0.3, 1) forwards, wave3 9s linear infinite;
+}
+
+@keyframes fill {
+  0% {
+    top: 90%;
+  }
+  10% {
+    top: 50%;
+  }
+  20% {
+    top: 25%;
+  }
+  30%{
+    top: 20%
+  }
+  100% {
+    top: 15%;
+  }
+}
+
+@keyframes wave {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes wave2 {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes wave3 {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* .custom-scrollbar {
+  height: 10%;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: red;
+  width: 0.2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 0.6rem;
+  background-color: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #6C5BE7;
+  border-radius: 10px;
+  min-height: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-button {
+  display: block;
+  height: 10px;
+  background-color: transparent;
+} */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 0.6rem;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background-color: white;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #6c5be7;
+  border-radius: 10px;
+}

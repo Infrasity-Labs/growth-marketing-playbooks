@@ -1,0 +1,75 @@
+name: Deployment
+
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build_and_deploy:
+    name: Build and Deploy to GCR and Cloud Run
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      # Authenticate with Google Cloud
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v0
+        with:
+          credentials_json: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          version: 'latest'
+          project_id: content-gen-418510
+
+      - name: Configure Docker for GCR
+        run: |
+          echo 'Y' | gcloud auth configure-docker
+      - name: Disable Buildx
+        run: |
+          docker buildx rm default || echo "Buildx builder instance 'default' does not exist."
+      - name: Docker Info
+        run: |
+          docker info
+      - name: Build Docker image
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          KEYWORD_API_KEY: ${{ secrets.KEYWORD_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_API_KEY: ${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}
+          NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}
+          NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}
+          NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${{ secrets.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET }}
+          NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID }}
+          NEXT_PUBLIC_FIREBASE_APP_ID: ${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}
+          OPENAI_MODEL: ${{ secrets.OPENAI_MODEL }}
+        run: |
+          set -x
+          docker build \
+            --build-arg OPENAI_API_KEY=${OPENAI_API_KEY} \
+            --build-arg KEYWORD_API_KEY=${KEYWORD_API_KEY} \
+            --build-arg NEXT_PUBLIC_FIREBASE_API_KEY=${NEXT_PUBLIC_FIREBASE_API_KEY} \
+            --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN} \
+            --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID=${NEXT_PUBLIC_FIREBASE_PROJECT_ID} \
+            --build-arg NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET} \
+            --build-arg NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID} \
+            --build-arg NEXT_PUBLIC_FIREBASE_APP_ID=${NEXT_PUBLIC_FIREBASE_APP_ID} \
+            --build-arg OPENAI_MODEL=${OPENAI_MODEL} \
+            -t gcr.io/content-gen-418510/content-gen:latest .
+      - name: Tag Docker image
+        run: |
+          docker tag gcr.io/content-gen-418510/content-gen:latest gcr.io/content-gen-418510/content-gen:latest
+      - name: Push Docker image to GCR
+        run: |
+          docker push gcr.io/content-gen-418510/content-gen:latest
+      - name: Set Cloud Run region
+        run: |
+          gcloud config set run/region us-east1
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy content-gen \
+            --image gcr.io/content-gen-418510/content-gen:latest \
+            --platform managed
