@@ -32,8 +32,9 @@ def load_items(path: Path):
 
 
 def read_state():
-    sdir = Path("state")
-    sdir.mkdir(exist_ok=True)
+    # store state at repo root/state/last_index.txt so CI can commit it
+    sdir = ROOT.parent / "state"
+    sdir.mkdir(parents=True, exist_ok=True)
     p = sdir / "last_index.txt"
     if not p.exists():
         return 0
@@ -45,8 +46,8 @@ def read_state():
 
 
 def write_state(val: int):
-    sdir = Path("state")
-    sdir.mkdir(exist_ok=True)
+    sdir = ROOT.parent / "state"
+    sdir.mkdir(parents=True, exist_ok=True)
     p = sdir / "last_index.txt"
     p.write_text(str(val), encoding="utf-8")
 
