@@ -554,7 +554,7 @@ def generate_banner(prompt: str, base_url: Optional[str] = None, caption: Option
     if not trimmed_prompt:
         raise RuntimeError("Banner prompt is empty")
 
-    provider = (os.getenv("BANNER_PROVIDER") or "auto").strip().lower()
+    provider = ("openai").strip().lower()
     # provider:
     #  - 'local'  = always local
     #  - 'openai' = only OpenAI Images (error on failure)
@@ -872,7 +872,7 @@ def main() -> None:
     load_dotenv()
     args = parse_args()
     # Debug: print banner/image envs and args
-    print(f"[app-debug] BANNER_PROVIDER={os.getenv('BANNER_PROVIDER')} OPENAI_API_KEY_set={'yes' if os.getenv('OPENAI_API_KEY') else 'no'} BANNER_UPLOAD_PROVIDER={os.getenv('BANNER_UPLOAD_PROVIDER')} --auto_banner={getattr(args, 'auto_banner', None)} --banner={getattr(args, 'banner', None)}")
+    print(f"[app-debug] BANNER_PROVIDER={'openai'} OPENAI_API_KEY_set={'yes' if os.getenv('OPENAI_API_KEY') else 'no'} BANNER_UPLOAD_PROVIDER={os.getenv('BANNER_UPLOAD_PROVIDER')} --auto_banner={getattr(args, 'auto_banner', None)} --banner={getattr(args, 'banner', None)}")
 
     tags = [t.strip() for t in args.tags.split(",") if t.strip()] if args.tags else []
     canonical_url = args.canonical or os.getenv("CANONICAL_URL") or args.url
