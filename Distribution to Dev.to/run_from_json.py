@@ -73,7 +73,8 @@ def build_cmd(item, publish: bool):
         cmd += ["--canonical", item.get("canonical")]
     if item.get("banner"):
         cmd += ["--banner", item.get("banner")]
-    if item.get("auto_banner"):
+    # Always request auto-banner unless explicit banner is set
+    if not item.get("banner"):
         cmd += ["--auto-banner"]
     if publish:
         cmd += ["--publish"]
