@@ -411,9 +411,7 @@ def _generate_openai_banner_file(prompt: str) -> pathlib.Path:
         "prompt": prompt[:2000],
         "n": 1,
         "size": requested_size,
-        # Prefer base64 to save without relying on remote URLs; the API may still return url.
-        # Some servers ignore response_format, so handle both cases below.
-        "response_format": "b64_json",
+        # 'response_format' is not supported for gpt-image-1-mini/gpt-4o models.
     }
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -435,22 +433,25 @@ def _generate_openai_banner_file(prompt: str) -> pathlib.Path:
         except Exception:
             pass
 
+
     arr = data.get("data") or []
     if not arr:
         raise RuntimeError(f"OpenAI Images returned no data: {data}")
     item = arr[0] or {}
 
     image_bytes: Optional[bytes] = None
-    if "b64_json" in item and item["b64_json"]:
-        try:
-            image_bytes = base64.b64decode(item["b64_json"])
-        except Exception as exc:  # pragma: no cover
-            raise RuntimeError("Failed to decode base64 image from OpenAI response") from exc
-    elif "url" in item and item["url"]:
+    # For gpt-image-1-mini/gpt-4o, only 'url' is returned.
+    if "url" in item and item["url"]:
         img_url = str(item["url"]).strip()
         r = requests.get(img_url, timeout=120)
         r.raise_for_status()
         image_bytes = r.content
+    elif "b64_json" in item and item["b64_json"]:
+        # For backward compatibility with DALL·E models.
+        try:
+            image_bytes = base64.b64decode(item["b64_json"])
+        except Exception as exc:  # pragma: no cover
+            raise RuntimeError("Failed to decode base64 image from OpenAI response") from exc
     else:
         raise RuntimeError(f"OpenAI Images response missing image content: {item}")
 
