@@ -14,6 +14,13 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).parent
+# Load .env if present so vars written by the workflow are available to this process
+try:
+    from dotenv import load_dotenv
+    load_dotenv(dotenv_path=ROOT / ".env")
+except Exception:
+    pass
+
 DATA_FILE = Path(os.getenv("DATA_FILE", "urls.json"))
 if not DATA_FILE.is_absolute():
     DATA_FILE = ROOT / DATA_FILE
@@ -74,6 +81,9 @@ def build_cmd(item, publish: bool):
 
 
 def main():
+    # Diagnostic: print effective publish flag and presence of keys
+    print(f"[runner-debug] RUN_PUBLISH={os.getenv('RUN_PUBLISH')} OPENAI_API_KEY_set={'yes' if os.getenv('OPENAI_API_KEY') else 'no'} DEVTO_API_KEY_set={'yes' if os.getenv('DEVTO_API_KEY') else 'no'} BANNER_UPLOAD_PROVIDER={os.getenv('BANNER_UPLOAD_PROVIDER')}")
+
     items = load_items(DATA_FILE)
     if not items:
         print("No items found in data file.")
