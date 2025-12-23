@@ -868,8 +868,11 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> None:
+
     load_dotenv()
     args = parse_args()
+    # Debug: print banner/image envs and args
+    print(f"[app-debug] BANNER_PROVIDER={os.getenv('BANNER_PROVIDER')} OPENAI_API_KEY_set={'yes' if os.getenv('OPENAI_API_KEY') else 'no'} BANNER_UPLOAD_PROVIDER={os.getenv('BANNER_UPLOAD_PROVIDER')} --auto_banner={getattr(args, 'auto_banner', None)} --banner={getattr(args, 'banner', None)}")
 
     tags = [t.strip() for t in args.tags.split(",") if t.strip()] if args.tags else []
     canonical_url = args.canonical or os.getenv("CANONICAL_URL") or args.url
