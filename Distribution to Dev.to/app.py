@@ -391,7 +391,8 @@ def _generate_openai_banner_file(prompt: str) -> pathlib.Path:
     if not api_key:
         raise RuntimeError("OPENAI_API_KEY missing for OpenAI image generation.")
 
-    model = (os.getenv("OPENAI_IMAGE_MODEL") or "gpt-image-1-mini").strip()
+    # Force model to 'dall-e-3' only
+    model = "dall-e-3"
     requested_size = (os.getenv("OPENAI_IMAGE_SIZE") or "1024x1024").strip()
     supported_sizes = {"1024x1024", "1024x1792", "1792x1024"}
     if requested_size not in supported_sizes:
@@ -687,15 +688,14 @@ def build_banner_prompt(title: str, raw_text: str, tags: Optional[List[str]] = N
     
     Includes explicit instructions to render text clearly and correctly.
     """
-    snippet_words = raw_text.split()
+    snippet_words = (raw_text or "").split()
     snippet = " ".join(snippet_words[:24]) if snippet_words else ""
     tag_line = f" Tags: {', '.join(tags)}." if tags else ""
     style_hint = os.getenv("BANNER_PROMPT_STYLE") or (
         "Minimal, modern blog banner; 1000x420 layout; no people/creatures; no fantasy; "
         "abstract geometric accents only; soft gradients; high contrast; generous whitespace; "
-        "clear focal area for title; flat illustration; professional tech aesthetic."
+        "clear focal area for title; flat illustration; professional tech aesthetic;any keeping less text in image."
     )
-    
     # Explicit text rendering instructions
     title_clean = " ".join((title or "").split())
     text_instructions = (
@@ -704,7 +704,6 @@ def build_banner_prompt(title: str, raw_text: str, tags: Optional[List[str]] = N
         "Ensure perfect spelling, high contrast, and zero OCR artifacts. "
         "Text must be crystal clear and readable even at small sizes."
     )
-    
     caption_instructions = ""
     if caption:
         cap_short = " ".join(caption.split())
@@ -713,7 +712,6 @@ def build_banner_prompt(title: str, raw_text: str, tags: Optional[List[str]] = N
             f" At bottom-left, render this caption EXACTLY (plain sans-serif, correctly spelled): '{cap_short}'. "
             "Caption must be high-contrast and fully legible with no decorative fonts."
         )
-    
     base = (
         f"Wide 1024x576 blog banner for '{title}'. "
         f"Context: {snippet}." + tag_line + " " + style_hint + " " + text_instructions + caption_instructions
