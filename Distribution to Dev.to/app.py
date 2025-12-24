@@ -789,13 +789,13 @@ def summarize_content(
         "Output must be markdown in this exact order:\n"
         "0) TL;DR (H2, exactly 5 concise, energetic bullet points): summarize the entire article in 5 unique, actionable, non-redundant points. This section is mandatory and must always be present at the very top.\n"
         "1) Introduction (140-180 words, no heading): Merge what would be the subtitle/intro hook (what they'll learn + who it's for) with the introduction. Write as a single, well-structured paragraph without a heading. Define the topic plainly, include one explicit definition sentence, why it matters, and who benefits. Use clear, expert, non-vague language as if written by a technical content writer with 10+ years experience.\n"
-        "2) Concept Explanation (140-180 words, no heading): Write a stepwise explanation and define jargon in short paragraphs, but do NOT use a heading. Use clear, expert, non-vague language as if written by a technical content writer with 10+ years experience.\n"
-        "3) How It Works / Process Breakdown (H2, 200-250 words): numbered steps for input -> processing -> output -> limitations. If a roadmap is present, make this a clear, stepwise roadmap. Do not repeat content from other sections.\n"
-        "4) Listicle Section (if applicable): If the article is a listicle (e.g., 'Top 10 Tools', 'Best Platforms', 'Top 9 Agencies'), you MUST create a dedicated H2 section that explicitly lists, names, and describes every main tool, platform, or item in the list. Each item must be clearly listed, named, and briefly described in its own bullet or numbered section. Do not skip, merge, or summarize items.\n"
+        "2) Concept Explanation (140-180 words, no heading): Write a stepwise explanation and define jargon in short paragraphs, but do NOT use a heading for this section. You may include internal subheadings or questions within the content if they are relevant and fit naturally for clarity—do not force them. Use clear, expert, non-vague language as if written by a technical content writer with 10+ years experience.\n"
+        "3) How It Works / Process Breakdown (H2, 200-250 words): For each step (input, processing, output, limitations, or roadmap steps), use a H3 heading for the step name, followed by a clear explanation. Do not repeat content from other sections.\n"
+        "4) Listicle Section (if applicable): If the article is a listicle (e.g., 'Top 10 Tools', 'Best Platforms', 'Top 9 Agencies'), you MUST create a dedicated H2 section that explicitly lists, names, and describes every main tool, platform, or item in the list. For each item, use a H3 heading with the item name, followed by a brief description. Do not skip, merge, or summarize items.\n"
         "5) Practical Example / Use Case (H2, 150-200 words): real-world scenario; minimal code optional + explanation\n"
         "6) Key Takeaways (H2, 3-5 bullets, 80-100 words total): each bullet is a complete sentence\n"
         "7) Conclusion (H2, 60-80 words): recap value; no new ideas; neutral forward-looking close\n"
-        f"Rules: stay between {lower}-{upper} words total; use H2 headings (except Introduction and Concept Explanation); one idea per paragraph; avoid walls of text; neutral professional tone; active voice; no emojis; avoid fluff; do NOT include an H1 title.\n"
+        f"Rules: stay between {lower}-{upper} words total; use H2 headings (except Introduction and Concept Explanation); use H3 headings for each item or step in any list or process (such as in listicles or input-processing-output steps); one idea per paragraph; avoid walls of text; neutral professional tone; active voice; no emojis; avoid fluff; do NOT include an H1 title.\n"
         "MANDATORY: If the article is a listicle, you MUST enumerate and describe every item in a dedicated section as above.\n"
         "MANDATORY: Do not repeat content between sections. Each section must be unique and add new value.\n"
         "MANDATORY: All sections must follow the same structure and formatting as described above.\n"
@@ -930,14 +930,14 @@ def main() -> None:
     title = args.title or page_title
     lock_title = args.lock_title or bool(args.title)
 
-    # Prepare company caption for banner rendering
-    caption_text = banner_caption_text()
+    # Do not use company blurb as caption for banner rendering
+    caption_text = None
 
     banner_url = args.banner
     if not banner_url and args.auto_banner:
-        prompt = args.banner_prompt or build_banner_prompt(title, page_text, tags, caption=caption_text)
+        prompt = args.banner_prompt or build_banner_prompt(title, page_text, tags, caption=None)
         base_url = args.banner_base_url or os.getenv("BANNER_BASE_URL")
-        banner_url = generate_banner(prompt, base_url=base_url, caption=caption_text)
+        banner_url = generate_banner(prompt, base_url=base_url, caption=None)
 
     summary_md = summarize_content(
         title,
