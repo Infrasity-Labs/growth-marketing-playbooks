@@ -788,15 +788,14 @@ def summarize_content(
     structure = (
         "Output must be markdown in this exact order:\n"
         "0) TL;DR (H2, exactly 5 concise, energetic bullet points): summarize the entire article in 5 unique, actionable, non-redundant points. This section is mandatory and must always be present at the very top.\n"
-        "1) Subtitle / Intro Hook (40-60 words): what they'll learn + who it's for\n"
-        "2) Introduction (100-130 words): define the topic plainly; include one explicit definition sentence; why it matters\n"
-        "3) Concept Explanation (H2, 150-200 words): stepwise explanation; short paragraphs; define jargon\n"
-        "4) How It Works / Process Breakdown (H2, 200-250 words): numbered steps for input -> processing -> output -> limitations. If a roadmap is present, make this a clear, stepwise roadmap. Do not repeat content from other sections.\n"
-        "5) Listicle Section (if applicable): If the article is a listicle (e.g., 'Top 10 Tools', 'Best Platforms', 'Top 9 Agencies'), you MUST create a dedicated H2 section that explicitly lists, names, and describes every main tool, platform, or item in the list. Each item must be clearly listed, named, and briefly described in its own bullet or numbered section. Do not skip, merge, or summarize items.\n"
-        "6) Practical Example / Use Case (H2, 150-200 words): real-world scenario; minimal code optional + explanation\n"
-        "7) Key Takeaways (H2, 3-5 bullets, 80-100 words total): each bullet is a complete sentence\n"
-        "8) Conclusion (H2, 60-80 words): recap value; no new ideas; neutral forward-looking close\n"
-        f"Rules: stay between {lower}-{upper} words total; use H2 headings; one idea per paragraph; avoid walls of text; neutral professional tone; active voice; no emojis; avoid fluff; do NOT include an H1 title.\n"
+        "1) Introduction (140-180 words, no heading): Merge what would be the subtitle/intro hook (what they'll learn + who it's for) with the introduction. Write as a single, well-structured paragraph without a heading. Define the topic plainly, include one explicit definition sentence, why it matters, and who benefits. Use clear, expert, non-vague language as if written by a technical content writer with 10+ years experience.\n"
+        "2) Concept Explanation (140-180 words, no heading): Write a stepwise explanation and define jargon in short paragraphs, but do NOT use a heading. Use clear, expert, non-vague language as if written by a technical content writer with 10+ years experience.\n"
+        "3) How It Works / Process Breakdown (H2, 200-250 words): numbered steps for input -> processing -> output -> limitations. If a roadmap is present, make this a clear, stepwise roadmap. Do not repeat content from other sections.\n"
+        "4) Listicle Section (if applicable): If the article is a listicle (e.g., 'Top 10 Tools', 'Best Platforms', 'Top 9 Agencies'), you MUST create a dedicated H2 section that explicitly lists, names, and describes every main tool, platform, or item in the list. Each item must be clearly listed, named, and briefly described in its own bullet or numbered section. Do not skip, merge, or summarize items.\n"
+        "5) Practical Example / Use Case (H2, 150-200 words): real-world scenario; minimal code optional + explanation\n"
+        "6) Key Takeaways (H2, 3-5 bullets, 80-100 words total): each bullet is a complete sentence\n"
+        "7) Conclusion (H2, 60-80 words): recap value; no new ideas; neutral forward-looking close\n"
+        f"Rules: stay between {lower}-{upper} words total; use H2 headings (except Introduction and Concept Explanation); one idea per paragraph; avoid walls of text; neutral professional tone; active voice; no emojis; avoid fluff; do NOT include an H1 title.\n"
         "MANDATORY: If the article is a listicle, you MUST enumerate and describe every item in a dedicated section as above.\n"
         "MANDATORY: Do not repeat content between sections. Each section must be unique and add new value.\n"
         "MANDATORY: All sections must follow the same structure and formatting as described above.\n"
@@ -811,8 +810,8 @@ def summarize_content(
     agent = Agent(
         name="summarizer",
         instructions=(
-            "You are a careful technical writer. Summarize the supplied article into markdown "
-            f"at {lower}-{upper} words. Use crisp, scannable wording. Never add fictional tools or facts. "
+            "You are a highly experienced technical content writer with 10+ years of expertise. Summarize the supplied article into markdown "
+            f"at {lower}-{upper} words. Use clear, precise, expert, and non-vague language throughout every section. Never add fictional tools or facts. "
             + structure
         ),
         model=model,
