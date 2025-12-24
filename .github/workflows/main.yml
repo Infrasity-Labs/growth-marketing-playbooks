@@ -41,6 +41,7 @@ jobs:
           GITHUB_BRANCH=${{ secrets.GIT_BRANCH }}
           GITHUB_PATH_PREFIX=${{ secrets.GIT_PATH_PREFIX }}
           RUN_PUBLISH=${{ secrets.RUN_PUBLISH }}
+          OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
           EOF
           # strip accidental leading spaces
           sed -E -i.bak 's/^[[:space:]]+//' "Distribution to Dev.to/.env" || true
