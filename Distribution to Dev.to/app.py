@@ -476,6 +476,46 @@ def _generate_openai_banner_file(prompt: str) -> pathlib.Path:
     return out_path
 
 
+def _generate_openrouter_banner_file(prompt: str) -> pathlib.Path:
+    """Generate an image via OpenRouter API and save to static/banners."""
+    api_key = (os.getenv("OPENROUTER_API_KEY") or "").strip()
+    if not api_key:
+        raise RuntimeError("OPENROUTER_API_KEY missing for OpenRouter image generation.")
+
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": "google/gemini-2.5-flash-image-preview",
+        "messages": [{"role": "user", "content": prompt}],
+        "modalities": ["image", "text"],
+        "image_config": {"aspect_ratio": "16:9", "image_size": "2K"},
+    }
+    resp = requests.post(url, json=payload, headers=headers, timeout=120)
+    resp.raise_for_status()
+    data = resp.json()
+    arr = data.get("choices") or []
+    if not arr:
+        raise RuntimeError(f"OpenRouter returned no data: {data}")
+    message = arr[0].get("message", {})
+    images = message.get("images", [])
+    if not images:
+        raise RuntimeError(f"OpenRouter response missing image content: {message}")
+    image_url = images[0]["image_url"]["url"]
+    if not image_url.startswith("data:image"):
+        raise RuntimeError("OpenRouter did not return a base64 image")
+    header, encoded = image_url.split(",", 1)
+    image_bytes = base64.b64decode(encoded)
+    STATIC_BANNERS_DIR.mkdir(parents=True, exist_ok=True)
+    ts = int(time.time())
+    filename = f"banner-openrouter-{ts}.png"
+    out_path = STATIC_BANNERS_DIR / filename
+    out_path.write_bytes(image_bytes)
+    return out_path
+
+
 def _local_file_to_base_url(file_path: pathlib.Path, base_url: str) -> str:
     return base_url.rstrip("/") + "/" + file_path.name
 
@@ -548,6 +588,7 @@ def generate_banner(prompt: str, base_url: Optional[str] = None, caption: Option
     Provider is selected via `BANNER_PROVIDER`:
     - `local` (default): generate a local PNG (no external API)
     - `openai`: generate via OpenAI Images (DALL·E)
+    - `openrouter`: generate via OpenRouter API
     - `auto`: try OpenAI Images, then fall back to local
     """
     base_url = (base_url or "").strip()
@@ -556,11 +597,7 @@ def generate_banner(prompt: str, base_url: Optional[str] = None, caption: Option
     if not trimmed_prompt:
         raise RuntimeError("Banner prompt is empty")
 
-    provider = ("openai").strip().lower()
-    # provider:
-    #  - 'local'  = always local
-    #  - 'openai' = only OpenAI Images (error on failure)
-    #  - 'auto'   = try OpenAI, then local
+    provider = (os.getenv("BANNER_PROVIDER") or "local").strip().lower()
     if provider == "local":
         # Extract a short title-like line from the prompt.
         title = trimmed_prompt
@@ -581,25 +618,52 @@ def generate_banner(prompt: str, base_url: Optional[str] = None, caption: Option
             "BANNER_BASE_URL is empty and no supported BANNER_UPLOAD_PROVIDER is configured. "
             "Set BANNER_BASE_URL to a public URL, or set BANNER_UPLOAD_PROVIDER=github with GITHUB_TOKEN+GITHUB_REPO."
         )
-
-    # Try OpenAI Images first (when provider is openai or auto)
-    if provider in ("openai", "auto"):
-        if not (os.getenv("OPENAI_API_KEY") or "").strip():
-            # Surface a clear error instead of silently falling back so users know to set the key
-            raise RuntimeError("OPENAI_API_KEY missing. Set it or choose BANNER_PROVIDER=local.")
-        try:
-            out_path = _generate_openai_banner_file(trimmed_prompt)
-            if base_url:
-                return _local_file_to_base_url(out_path, base_url)
-            upload_provider = (os.getenv("BANNER_UPLOAD_PROVIDER") or "github").strip().lower()
-            if upload_provider == "github":
-                return _github_upload_banner(out_path)
-            return str(out_path)
-        except Exception:
-            if provider == "openai":
-                # In openai-only mode, surface the failure
-                raise
-            # In auto mode, fall through to local
+    elif provider == "openai":
+        # Try OpenAI Images first (when provider is openai or auto)
+        if provider in ("openai", "auto"):
+            if not (os.getenv("OPENAI_API_KEY") or "").strip():
+                # Surface a clear error instead of silently falling back so users know to set the key
+                raise RuntimeError("OPENAI_API_KEY missing. Set it or choose BANNER_PROVIDER=local.")
+            try:
+                out_path = _generate_openai_banner_file(trimmed_prompt)
+                if base_url:
+                    return _local_file_to_base_url(out_path, base_url)
+                upload_provider = (os.getenv("BANNER_UPLOAD_PROVIDER") or "github").strip().lower()
+                if upload_provider == "github":
+                    return _github_upload_banner(out_path)
+                return str(out_path)
+            except Exception:
+                if provider == "openai":
+                    # In openai-only mode, surface the failure
+                    raise
+                # In auto mode, fall through to local
+    elif provider == "openrouter":
+        out_path = _generate_openrouter_banner_file(trimmed_prompt)
+        if base_url:
+            return _local_file_to_base_url(out_path, base_url)
+        upload_provider = (os.getenv("BANNER_UPLOAD_PROVIDER") or "github").strip().lower()
+        if upload_provider == "github":
+            return _github_upload_banner(out_path)
+        return str(out_path)
+    elif provider == "auto":
+        # Try OpenAI Images first (when provider is openai or auto)
+        if provider in ("openai", "auto"):
+            if not (os.getenv("OPENAI_API_KEY") or "").strip():
+                # Surface a clear error instead of silently falling back so users know to set the key
+                raise RuntimeError("OPENAI_API_KEY missing. Set it or choose BANNER_PROVIDER=local.")
+            try:
+                out_path = _generate_openai_banner_file(trimmed_prompt)
+                if base_url:
+                    return _local_file_to_base_url(out_path, base_url)
+                upload_provider = (os.getenv("BANNER_UPLOAD_PROVIDER") or "github").strip().lower()
+                if upload_provider == "github":
+                    return _github_upload_banner(out_path)
+                return str(out_path)
+            except Exception:
+                if provider == "openai":
+                    # In openai-only mode, surface the failure
+                    raise
+                # In auto mode, fall through to local
 
     # Final fallback: local generator
     title = trimmed_prompt
@@ -688,35 +752,18 @@ def build_banner_prompt(title: str, raw_text: str, tags: Optional[List[str]] = N
     
     Includes explicit instructions to render text clearly and correctly.
     """
-    snippet_words = (raw_text or "").split()
-    snippet = " ".join(snippet_words[:24]) if snippet_words else ""
-    tag_line = f" Tags: {', '.join(tags)}." if tags else ""
-    style_hint = os.getenv("BANNER_PROMPT_STYLE") or (
-        "Minimal, modern blog banner; 1000x420 layout; no people/creatures; no fantasy; "
-        "abstract geometric accents only; soft gradients; high contrast; generous whitespace; "
-        "clear focal area for title; flat illustration; professional tech aesthetic;any keeping less text in image."
-    )
-    # Explicit text rendering instructions
     title_clean = " ".join((title or "").split())
-    text_instructions = (
-        f"IMPORTANT: Render the main title text EXACTLY as: '{title_clean}'. "
-        "Use a large, bold, legible sans-serif font (like Arial or Helvetica) centered prominently. "
-        "Ensure perfect spelling, high contrast, and zero OCR artifacts. "
-        "Text must be crystal clear and readable even at small sizes."
+    style_hint = (
+        "Modern, professional blog banner; 16:9 aspect ratio; vibrant colors; soft gradients; "
+        "abstract geometric shapes; clean layout; bold sans-serif title; subtle tech accents; "
+        "no people, no fantasy, no clutter; high contrast; visually striking; suitable for SaaS audience."
     )
-    caption_instructions = ""
+    prompt = f"{title_clean}. {style_hint}"
     if caption:
         cap_short = " ".join(caption.split())
-        cap_short = cap_short if len(cap_short) <= 200 else cap_short[:197].rstrip() + "…"
-        caption_instructions = (
-            f" At bottom-left, render this caption EXACTLY (plain sans-serif, correctly spelled): '{cap_short}'. "
-            "Caption must be high-contrast and fully legible with no decorative fonts."
-        )
-    base = (
-        f"Wide 1024x576 blog banner for '{title}'. "
-        f"Context: {snippet}." + tag_line + " " + style_hint + " " + text_instructions + caption_instructions
-    )
-    return base.strip()
+        cap_short = cap_short if len(cap_short) <= 100 else cap_short[:97].rstrip() + "…"
+        prompt += f" Caption: {cap_short}."
+    return prompt.strip()
 
 
 def summarize_content(
@@ -740,15 +787,19 @@ def summarize_content(
     primary_keyword = (os.getenv("PRIMARY_KEYWORD") or source_title or "").strip()
     structure = (
         "Output must be markdown in this exact order:\n"
+        "0) TL;DR (H2, exactly 5 concise, energetic bullet points): summarize the entire article in 5 unique, actionable, non-redundant points. This section is mandatory and must always be present at the very top.\n"
         "1) Subtitle / Intro Hook (40-60 words): what they'll learn + who it's for\n"
         "2) Introduction (100-130 words): define the topic plainly; include one explicit definition sentence; why it matters\n"
         "3) Concept Explanation (H2, 150-200 words): stepwise explanation; short paragraphs; define jargon\n"
-        "4) How It Works / Process Breakdown (H2, 200-250 words): numbered steps for input -> processing -> output -> limitations\n"
-        "5) Practical Example / Use Case (H2, 150-200 words): real-world scenario; minimal code optional + explanation\n"
-        "6) Key Takeaways (H2, 3-5 bullets, 80-100 words total): each bullet is a complete sentence\n"
-        "7) Conclusion (H2, 60-80 words): recap value; no new ideas; neutral forward-looking close\n"
-        f"Rules: stay between {lower}-{upper} words total; use H2 headings; one idea per paragraph; avoid walls of text; "
-        "neutral professional tone; active voice; no emojis; avoid fluff; do NOT include an H1 title.\n"
+        "4) How It Works / Process Breakdown (H2, 200-250 words): numbered steps for input -> processing -> output -> limitations. If a roadmap is present, make this a clear, stepwise roadmap. Do not repeat content from other sections.\n"
+        "5) Listicle Section (if applicable): If the article is a listicle (e.g., 'Top 10 Tools', 'Best Platforms', 'Top 9 Agencies'), you MUST create a dedicated H2 section that explicitly lists, names, and describes every main tool, platform, or item in the list. Each item must be clearly listed, named, and briefly described in its own bullet or numbered section. Do not skip, merge, or summarize items.\n"
+        "6) Practical Example / Use Case (H2, 150-200 words): real-world scenario; minimal code optional + explanation\n"
+        "7) Key Takeaways (H2, 3-5 bullets, 80-100 words total): each bullet is a complete sentence\n"
+        "8) Conclusion (H2, 60-80 words): recap value; no new ideas; neutral forward-looking close\n"
+        f"Rules: stay between {lower}-{upper} words total; use H2 headings; one idea per paragraph; avoid walls of text; neutral professional tone; active voice; no emojis; avoid fluff; do NOT include an H1 title.\n"
+        "MANDATORY: If the article is a listicle, you MUST enumerate and describe every item in a dedicated section as above.\n"
+        "MANDATORY: Do not repeat content between sections. Each section must be unique and add new value.\n"
+        "MANDATORY: All sections must follow the same structure and formatting as described above.\n"
         "Grounding rules (mandatory):\n"
         "- Use ONLY the provided extracted content and provided links. Do not add tools/facts not present in the source.\n"
         "- If a detail is missing from the source, keep it general and explicitly avoid specifics.\n"
