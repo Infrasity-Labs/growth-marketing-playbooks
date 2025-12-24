@@ -9,6 +9,7 @@ Behavior:
 import json
 import os
 import subprocess
+import traceback
 import sys
 from pathlib import Path
 
@@ -38,25 +39,29 @@ def load_items(path: Path):
     return list(data)
 
 
-def read_state():
-    # store state in Distribution to Dev.to/state/last_index.txt
+
+def state_file_path():
     sdir = ROOT / "state"
     sdir.mkdir(parents=True, exist_ok=True)
-    p = sdir / "last_index.txt"
+    return sdir / "last_state.json"
+
+def read_state_json():
+    p = state_file_path()
     if not p.exists():
-        return 0
+        return {"processed": [], "pending": [], "error": []}
     try:
-        v = int(p.read_text(encoding="utf-8").strip())
-        return v
+        with p.open("r", encoding="utf-8") as f:
+            return json.load(f)
     except Exception:
-        return 0
+        return {"processed": [], "pending": [], "error": []}
+
+def write_state_json(state):
+    p = state_file_path()
+    with p.open("w", encoding="utf-8") as f:
+        json.dump(state, f, indent=2)
 
 
-def write_state(val: int):
-    sdir = ROOT / "state"
-    sdir.mkdir(parents=True, exist_ok=True)
-    p = sdir / "last_index.txt"
-    p.write_text(str(val), encoding="utf-8")
+
 
 
 def build_cmd(item, publish: bool):
@@ -85,47 +90,89 @@ def main():
     # Diagnostic: print effective publish flag and presence of keys
     print(f"[runner-debug] RUN_PUBLISH={os.getenv('RUN_PUBLISH')} OPENAI_API_KEY_set={'yes' if os.getenv('OPENAI_API_KEY') else 'no'} DEVTO_API_KEY_set={'yes' if os.getenv('DEVTO_API_KEY') else 'no'} BANNER_UPLOAD_PROVIDER={os.getenv('BANNER_UPLOAD_PROVIDER')}")
 
+
     items = load_items(DATA_FILE)
     if not items:
         print("No items found in data file.")
         raise SystemExit(1)
 
-    # If SHEET_ROW_INDEX provided, use it (1-based)
     idx_env = os.getenv("SHEET_ROW_INDEX")
     publish = os.getenv("RUN_PUBLISH", "0").lower() in ("1", "true", "yes", "on")
 
+    state = read_state_json()
+    # On first run, populate pending if empty
+    if not state["pending"] and not state["processed"] and not state["error"]:
+        state["pending"] = [item["url"] for item in items]
+        write_state_json(state)
+
+    def find_item_by_url(url):
+        for item in items:
+            if item.get("url") == url:
+                return item
+        return None
+
+    # If SHEET_ROW_INDEX provided, use it (1-based)
     if idx_env:
         try:
             idx = max(0, int(idx_env) - 1)
         except Exception:
             print("Invalid SHEET_ROW_INDEX")
             raise SystemExit(2)
-        if idx >= len(items):
-            print(f"Index {idx+1} out of range (items: {len(items)})")
+        if idx >= len(state["pending"]):
+            print(f"Index {idx+1} out of range (pending items: {len(state['pending'])})")
             raise SystemExit(3)
-        item = items[idx]
+        url = state["pending"][idx]
+        item = find_item_by_url(url)
+        if not item:
+            print(f"Item for url {url} not found in data file.")
+            raise SystemExit(4)
         cmd = build_cmd(item, publish)
         rc = subprocess.call(cmd)
+        if rc == 0:
+            state["processed"].append(url)
+            state["pending"].remove(url)
+        else:
+            state["error"].append({"url": url, "error": f"Exit code {rc}"})
+            state["pending"].remove(url)
+        write_state_json(state)
         raise SystemExit(rc)
 
-    # Otherwise use state file to pick next
-    last = read_state()
-    next_idx = last
-    if next_idx >= len(items):
-        print("Reached end of items; resetting to 0")
-        next_idx = 0
-
-    item = items[next_idx]
-    cmd = build_cmd(item, publish)
-    rc = subprocess.call(cmd)
-    if rc == 0:
-        # advance and write state
-        new = next_idx + 1
-        write_state(new)
-        print(f"Processed index {next_idx+1}; advanced to {new}")
-    else:
-        print(f"Runner failed with exit code {rc}; not advancing state")
-    raise SystemExit(rc)
+    # Try pending URLs in order until one is published successfully, or all are errors
+    published = False
+    for url in list(state["pending"]):
+        item = find_item_by_url(url)
+        if not item:
+            print(f"Item for url {url} not found in data file.")
+            state["error"].append({"url": url, "error": "Not found in data file"})
+            state["pending"].remove(url)
+            write_state_json(state)
+            continue
+        cmd = build_cmd(item, publish)
+        try:
+            rc = subprocess.call(cmd)
+        except Exception as exc:
+            rc = 99
+            err_msg = f"Exception: {exc}\n{traceback.format_exc()}"
+            print(f"Runner exception for {url}: {err_msg}")
+            state["error"].append({"url": url, "error": err_msg})
+            state["pending"].remove(url)
+            write_state_json(state)
+            continue
+        if rc == 0:
+            state["processed"].append(url)
+            state["pending"].remove(url)
+            write_state_json(state)
+            print(f"Processed {url}")
+            published = True
+            break
+        else:
+            state["error"].append({"url": url, "error": f"Exit code {rc}"})
+            state["pending"].remove(url)
+            write_state_json(state)
+            print(f"Error processing {url}, exit code {rc}")
+    if not published:
+        print("No blog was published (all pending URLs failed or errored).")
+    raise SystemExit(0)
 
 
 if __name__ == "__main__":
