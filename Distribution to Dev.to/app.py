@@ -327,22 +327,7 @@ def _generate_local_banner_file(text: str, caption: Optional[str] = None) -> pat
         draw.multiline_text((x + ox, y + oy), text_block, font=font, fill=(0, 0, 0), spacing=10, align="center")
     draw.multiline_text((x, y), text_block, font=font, fill=(255, 255, 255), spacing=10, align="center")
 
-    if caption:
-        cap = " ".join(caption.split())
-        if len(cap) > 160:
-            cap = cap[:157].rstrip() + "..."
-        cap_font = _pick_font(24)
-        cap_bbox = draw.textbbox((0, 0), cap, font=cap_font)
-        cap_w, cap_h = cap_bbox[2] - cap_bbox[0], cap_bbox[3] - cap_bbox[1]
-        pad_x, pad_y = 14, 10
-        box_x, box_y = 36, height - cap_h - pad_y * 2 - 28
-        draw.rectangle(
-            [(box_x - pad_x, box_y - pad_y), (box_x + cap_w + pad_x, box_y + cap_h + pad_y)],
-            fill=(12, 18, 32),
-            outline=(255, 255, 255),
-            width=2,
-        )
-        draw.text((box_x, box_y), cap, font=cap_font, fill=(230, 245, 255))
+    # Caption rendering removed: no About Infrasity or other caption on local banners
 
     STATIC_BANNERS_DIR.mkdir(parents=True, exist_ok=True)
     ts = int(time.time())

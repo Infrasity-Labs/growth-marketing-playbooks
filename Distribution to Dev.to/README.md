@@ -48,7 +48,7 @@ Flags:
 - `--banner-base-url` Base URL to serve generated banners (e.g., `http://localhost:5000/static/banners`). Optional if you use GitHub uploads (see below).
 
 Optional env:
-- `BANNER_PROVIDER` Banner provider: `local` (default), `openai`, or `auto` (`auto` tries OpenAI then falls back to local).
+- `BANNER_PROVIDER` Banner provider: `local` (default), `openai`, `openrouter`, or `auto` (`auto` tries OpenAI, then OpenRouter, then falls back to local).
 - `OPENAI_IMAGE_MODEL` Override the image model used for OpenAI image generation (default: `dall-e-3`).
 - `BANNER_UPLOAD_PROVIDER` Where to host generated banners when `BANNER_BASE_URL` is not set. Supported: `github`.
 - `GITHUB_TOKEN`, `GITHUB_REPO`, `GITHUB_BRANCH`, `GITHUB_PATH_PREFIX` Used when `BANNER_UPLOAD_PROVIDER=github`.
@@ -61,7 +61,7 @@ Required:
 - `DEVTO_API_KEY` — Dev.to API key used to publish articles.
 
 Common optional environment variables (examples also present in `.env.example`):
-- `BANNER_PROVIDER` — `local` (default), `openai`, or `auto` (try `openai` then `local`).
+- `BANNER_PROVIDER` — `local` (default), `openai`, `openrouter`, or `auto` (try `openai`, then `openrouter`, then `local`).
 - `OPENAI_IMAGE_MODEL` — model identifier for OpenAI image requests (default: `dall-e-3`).
 - `OPENAI_IMAGE_SIZE` — requested image size for OpenAI (e.g., `1024x1024`, `1792x1024`).
 - `BANNER_OUTPUT_SIZE` — final center-cropped output size for banners (e.g., `1000x420`).
@@ -93,30 +93,42 @@ Structure the model produces (aligned to checklist, ~800–1000 words total):
 9. Conclusion (H2, 60–80 words)
 Note: The Dev.to title is provided separately and not rendered in the markdown body.
 
+
+## Banner Providers
+
+You can generate banners using:
+- **local**: Fast, no external API, generates a simple PNG banner.
+- **openai**: Uses OpenAI's DALL·E for high-quality banners (requires `OPENAI_API_KEY`).
+- **openrouter**: Uses OpenRouter's Gemini/other models for banners (requires `OPENROUTER_API_KEY`).
+- **auto**: Tries OpenAI, then OpenRouter, then falls back to local.
+
+Set the provider with the `BANNER_PROVIDER` environment variable.
+
 ## Web UI (Flask)
 
-Run a simple form-based UI to enter a URL and publish toggle (Dev.to only). Banners are auto-generated.
+You can also use a simple web interface to generate and preview Dev.to-ready summaries and banners.
 
+**To run locally:**
 ```bash
 cp .env.example .env  # fill in keys
 python web.py  # defaults to http://127.0.0.1:5000
 ```
 
-For Dev.to publishing, the banner URL must be publicly reachable.
+**Web UI Preview:**
 
-Recommended: GitHub upload (no ngrok)
+![Web UI Screenshot](static/Web_Preview.png)
 
-1) Create a PUBLIC GitHub repo (or use an existing one).
-2) Create a fine-grained token with "Contents: Read and write" for that repo.
-3) Set in `.env`:
-
-- `BANNER_UPLOAD_PROVIDER=github`
-- `GITHUB_TOKEN=...`
-- `GITHUB_REPO=owner/repo`
-
-When `BANNER_BASE_URL` is empty, the script uploads the generated PNG to GitHub and uses the returned `download_url`.
-
-Local-only note: if you are just previewing the banner in the web UI (not publishing), you can still set `BANNER_BASE_URL` to `http://127.0.0.1:5000/static/banners`.
+**Notes:**
+- For Dev.to publishing, the banner URL must be publicly reachable.
+- Recommended: GitHub upload (no ngrok)
+  1. Create a PUBLIC GitHub repo (or use an existing one).
+  2. Create a fine-grained token with "Contents: Read and write" for that repo.
+  3. Set in `.env`:
+    - `BANNER_UPLOAD_PROVIDER=github`
+    - `GITHUB_TOKEN=...`
+    - `GITHUB_REPO=owner/repo`
+- When `BANNER_BASE_URL` is empty, the script uploads the generated PNG to GitHub and uses the returned `download_url`.
+- Local-only note: if you are just previewing the banner in the web UI (not publishing), you can still set `BANNER_BASE_URL` to `http://127.0.0.1:5000/static/banners`.
 
 ## How it works
 
