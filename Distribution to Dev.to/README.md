@@ -136,6 +136,21 @@ python web.py  # defaults to http://127.0.0.1:5000
 2. Calls the OpenAI Agents SDK (`agents.Agent` + `Runner.run_sync`) to produce an ~800–1000 word markdown summary.
 3. Posts markdown to Dev.to using its public API.
 
+## State Tracking (Batch & Automation)
+
+When running in batch mode or via automation (e.g., GitHub Actions), the script tracks all publishing state in `state/last_state.json`. This file records:
+
+- `processed`: URLs that have been successfully published
+- `pending`: URLs still to be processed
+- `error`: URLs that failed (e.g., canonical URL errors)
+
+This ensures:
+- Only one blog is published per day (pending URLs are retried in order)
+- Errors are skipped and logged for review
+- State is persistent across runs (including in CI)
+
+You should commit `state/last_state.json` to your repository if you want to persist and audit publishing state over time.
+
 ## Notes
 
 - The summarization prompt targets ~800–1000 words but the model may vary slightly.
