@@ -1,3 +1,6 @@
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 import argparse
 import os
 import pathlib
@@ -37,6 +40,66 @@ def banner_caption_text() -> str:
 def _truthy_env(name: str, default: str = "0") -> bool:
     return (os.getenv(name, default) or "").strip().lower() in {"1", "true", "yes", "on"}
 
+try:
+    import markdown2
+except ImportError:
+    markdown2 = None
+def send_medium_email(subject: str, markdown_content: str, recipient_email: str, sender_email: str, smtp_server: str, smtp_port: int, smtp_user: str, smtp_password: str, banner_url: str = None):
+        """Convert markdown to HTML and send as email body for Medium copy-paste, with banner image at the top."""
+        if not markdown2:
+                raise ImportError("markdown2 is required. Install with: pip install markdown2")
+        # Remove banner markdown from content for HTML part (so it only appears in the template)
+        html_body = markdown2.markdown(strip_banner_markdown(markdown_content, banner_url))
+        # Compose HTML with banner at the top (if available)
+        banner_html = f'<div style="text-align:center;margin-bottom:24px;"><img src="{banner_url}" alt="Banner" style="max-width:100%;height:auto;border-radius:12px;box-shadow:0 2px 8px #0002;"></div>' if banner_url else ''
+        full_html = f"""
+        <html>
+            <body style="font-family:Arial,sans-serif;max-width:700px;margin:0 auto;padding:24px;background:#f9f9f9;">
+                {banner_html}
+                <div style="background:#fff;padding:24px 32px 32px 32px;border-radius:12px;box-shadow:0 2px 8px #0001;">
+                    {html_body}
+                </div>
+            </body>
+        </html>
+        """
+        print("[medium-email-debug] Banner URL:", banner_url)
+        print("[medium-email-debug] HTML preview:\n", full_html[:800], "...\n[truncated]")
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = sender_email
+        msg['To'] = recipient_email
+        part1 = MIMEText(markdown_content, 'plain')
+        part2 = MIMEText(full_html, 'html')
+        msg.attach(part1)
+        msg.attach(part2)
+        with smtplib.SMTP_SSL(smtp_server, smtp_port) as server:
+                server.login(smtp_user, smtp_password)
+                server.sendmail(sender_email, [recipient_email], msg.as_string())
+
+def strip_banner_markdown(md: str, banner_url: str) -> str:
+    """Remove the first ![Banner](url) from the markdown (for Medium HTML)."""
+    if not banner_url:
+        return md
+    lines = md.splitlines()
+    found = False
+    new_lines = []
+    for line in lines:
+        if not found and line.strip().startswith(f"![Banner](") and banner_url in line:
+            found = True
+            continue  # skip this line
+        new_lines.append(line)
+    return "\n".join(new_lines)
+
+def get_medium_email_config_from_env():
+    """Return a dict of Medium/SMTP config from env vars, or None if not set."""
+    keys = [
+        "MEDIUM_EMAIL", "SMTP_SERVER", "SMTP_PORT", "SMTP_USER", "SMTP_PASSWORD", "SMTP_FROM"
+    ]
+    config = {k.lower(): os.getenv(k) for k in keys}
+    if not config["medium_email"] or not config["smtp_server"] or not config["smtp_user"] or not config["smtp_password"] or not config["smtp_from"]:
+        return None
+    config["smtp_port"] = int(config["smtp_port"] or 465)
+    return config
 
 def _ensure_front_matter_cover_image(body_md: str, cover_image_url: str) -> str:
     """Ensure DEV front matter includes cover_image, without clobbering other content."""
@@ -584,13 +647,9 @@ def generate_banner(prompt: str, base_url: Optional[str] = None, caption: Option
 
     provider = (os.getenv("BANNER_PROVIDER") or "local").strip().lower()
     if provider == "local":
-        # Extract a short title-like line from the prompt.
-        title = trimmed_prompt
-        if "titled '" in title:
-            try:
-                title = title.split("titled '", 1)[1].split("'", 1)[0]
-            except Exception:
-                title = trimmed_prompt
+        # Only use the blog title as the visible text for local banners.
+        # Try to extract the title from the prompt (which is usually: f"{title_clean}. {style_hint}")
+        title = prompt.split(". ", 1)[0].strip()
         out_path = _generate_local_banner_file(title, caption=caption)
         if base_url:
             return _local_file_to_base_url(out_path, base_url)
@@ -739,6 +798,7 @@ def build_banner_prompt(title: str, raw_text: str, tags: Optional[List[str]] = N
     """
     title_clean = " ".join((title or "").split())
     style_hint = (
+        "Just include my title text prominently and do not include the companies name like in top X blogs or some listicle do no add name about it. "
         "Modern, professional blog banner; 16:9 aspect ratio; vibrant colors; soft gradients; "
         "abstract geometric shapes; clean layout; bold sans-serif title; subtle tech accents; "
         "no people, no fantasy, no clutter; high contrast; visually striking; suitable for SaaS audience."
@@ -770,35 +830,154 @@ def summarize_content(
 
     lower, upper = target_words
     primary_keyword = (os.getenv("PRIMARY_KEYWORD") or source_title or "").strip()
-    structure = (
-        "Output must be markdown in this exact order:\n"
-        "0) TL;DR (H2, exactly 5 concise, energetic bullet points): summarize the entire article in 5 unique, actionable, non-redundant points. This section is mandatory and must always be present at the very top.\n"
-        "1) Introduction (140-180 words, no heading): Merge what would be the subtitle/intro hook (what they'll learn + who it's for) with the introduction. Write as a single, well-structured paragraph without a heading. Define the topic plainly, include one explicit definition sentence, why it matters, and who benefits. Use clear, expert, non-vague language as if written by a technical content writer with 10+ years experience.\n"
-        "2) Concept Explanation (140-180 words, no heading): Write a stepwise explanation and define jargon in short paragraphs, but do NOT use a heading for this section. You may include internal subheadings or questions within the content if they are relevant and fit naturally for clarity—do not force them. Use clear, expert, non-vague language as if written by a technical content writer with 10+ years experience.\n"
-        "3) How It Works / Process Breakdown (H2, 200-250 words): For each step (input, processing, output, limitations, or roadmap steps), use a H3 heading for the step name, followed by a clear explanation. Do not repeat content from other sections.\n"
-        "4) Listicle Section (if applicable): If the article is a listicle (e.g., 'Top 10 Tools', 'Best Platforms', 'Top 9 Agencies'), you MUST create a dedicated H2 section that explicitly lists, names, and describes every main tool, platform, or item in the list. For each item, use a H3 heading with the item name, followed by a brief description. Do not skip, merge, or summarize items.\n"
-        "5) Practical Example / Use Case (H2, 150-200 words): real-world scenario; minimal code optional + explanation\n"
-        "6) Key Takeaways (H2, 3-5 bullets, 80-100 words total): each bullet is a complete sentence\n"
-        "7) Conclusion (H2, 60-80 words): recap value; no new ideas; neutral forward-looking close\n"
-        f"Rules: stay between {lower}-{upper} words total; use H2 headings (except Introduction and Concept Explanation); use H3 headings for each item or step in any list or process (such as in listicles or input-processing-output steps); one idea per paragraph; avoid walls of text; neutral professional tone; active voice; no emojis; avoid fluff; do NOT include an H1 title.\n"
-        "MANDATORY: If the article is a listicle, you MUST enumerate and describe every item in a dedicated section as above.\n"
-        "MANDATORY: Do not repeat content between sections. Each section must be unique and add new value.\n"
-        "MANDATORY: All sections must follow the same structure and formatting as described above.\n"
-        "Grounding rules (mandatory):\n"
-        "- Use ONLY the provided extracted content and provided links. Do not add tools/facts not present in the source.\n"
-        "- If a detail is missing from the source, keep it general and explicitly avoid specifics.\n"
-        "- Preserve important source links: include 2-6 of them where relevant (intro/process/example), without dumping an unrelated link list.\n"
-        "- Preserve and explicitly cover the provided main points from the source. Ensure each main point appears either in the body or the Key Takeaways; if a main point cannot be verified from the provided content, state that explicitly.\n"
-        f"SEO/LLM: Primary keyword is '{primary_keyword}'. Use it naturally in the Introduction and in at least one H2 heading. Avoid keyword stuffing."
-    )
+
+    structure = f"""
+You are a senior technical writer with 10+ years of experience writing high-performing developer blogs for dev.to and Medium.
+
+Your task is to rewrite the provided extracted blog content into a dev.to-ready article that preserves technical correctness, improves narrative engagement, and increases discussion and sharing — without adding facts not present in the source.
+
+────────────────────────────────────────
+STRUCTURE (MANDATORY, EXACT ORDER)
+────────────────────────────────────────
+
+Output must be markdown in this exact order:
+
+0) TL;DR (H2, exactly 5 concise, energetic bullet points)
+- Summarize the entire article in 5 unique, actionable, non-redundant points.
+- Bullets should reflect opinionated insights or lessons learned, not neutral summaries.
+- This section is mandatory and must always be present at the very top.
+
+1) Introduction (140–180 words, NO heading)
+- Write a single, well-structured paragraph.
+- Open with a relatable developer frustration, realization, or moment of confusion.
+- Clearly state what the reader will learn and who this is for.
+- Include exactly one explicit definition sentence.
+- Explain why this topic matters in real developer workflows.
+- Use clear, expert, non-vague language.
+- Write in first person where it improves clarity or credibility.
+
+2) Concept Explanation (140–180 words, NO heading)
+- Explain the core concept step-by-step.
+- Define any jargon clearly and briefly.
+- Where appropriate, contrast common assumptions with what actually happens in practice.
+- You may use internal sub-questions or short emphasis lines if they fit naturally.
+- Maintain an experienced, human tone — not a textbook explanation.
+
+3) How It Works / Process Breakdown (H2, 200–250 words)
+- Break the system into clear steps using H3 headings for each step.
+- Steps may include input, processing, output, constraints, trade-offs, or roadmap considerations.
+- Do NOT repeat content from earlier sections.
+- For at least one step, briefly explain why this part caused friction, surprise, or learning in real usage.
+
+4) Listicle Section (ONLY IF APPLICABLE)
+- If the article is a listicle (e.g., “Top Tools”, “Best Platforms”, “Agencies”, “Top 10 Companies”, etc.), you MUST create a dedicated H2 section.
+- Explicitly list and describe EVERY item mentioned in the source. For each item (such as a company, tool, or platform), include:
+    - An H3 heading with the exact item name (e.g., company name)
+    - A short, specific description of what the item is, what makes it notable, and any unique strengths or focus areas mentioned in the source
+- Do NOT merge, skip, or summarize items. If the source lists 10 companies, all 10 must be present, each with its own heading and description. If the source is vague, state that explicitly and do not invent details.
+
+5) Practical Example / Use Case (H2, 150–200 words)
+- Describe a realistic, real-world scenario the author encountered or observed.
+- Anchor the example in actual constraints, trade-offs, or decision points.
+- Minimal code is optional but must be explained clearly.
+- Focus on why the example mattered, not just what happened.
+
+6) Key Takeaways (H2, 3–5 bullets, 80–100 words total)
+- Each bullet must be a complete sentence.
+- Capture lessons learned, not restated headings.
+- Avoid generic “best practice” phrasing.
+
+7) Conclusion (H2, 60–80 words)
+- Recap the core value and implications.
+- Do NOT introduce new ideas.
+- End with 1–2 open-ended questions inviting discussion, disagreement, or shared experience.
+- Do NOT include company CTAs or promotional language.
+
+────────────────────────────────────────
+VOICE, NARRATIVE & AUDIENCE (MANDATORY)
+────────────────────────────────────────
+
+- Write with a strong individual author voice, not a corporate or brand voice.
+- Avoid phrases like “we at <company>” or marketing language.
+- Use first person (“I”, “me”, “my”) where it improves authenticity.
+- Use narrative framing: problem → realization → insight → implication.
+- Include personal observations, trade-offs, or reflections where the source allows.
+
+Audience targeting:
+- Explicitly write for a specific developer persona (e.g., solo devs, mid-level engineers, AI-curious developers).
+- Use identity-driven language such as:
+    - “If you’ve ever struggled with…”
+    - “You might have noticed…”
+    - “This is for developers who…”
+- Do NOT write for “all developers” generically.
+
+        ────────────────────────────────────────
+        BRAND MENTION CONSTRAINT (MANDATORY)
+        ────────────────────────────────────────
+
+        - Infrasity may be mentioned at most ONCE in the entire article.
+        - The mention must be:
+            - First-person
+            - Contextual (partner, collaboration, or environment)
+            - Non-promotional
+        - Allowed examples:
+            - “In my work with Infrasity, I ran into…”
+            - “While collaborating with the team at Infrasity, I noticed…”
+        - Disallowed:
+            - Product descriptions
+            - Marketing claims
+            - CTAs
+            - “We at Infrasity…”
+            - Any tone implying sponsorship or sales intent
+
+        ────────────────────────────────────────
+        GROUNDING & SOURCE RULES (MANDATORY)
+        ────────────────────────────────────────
+
+        - Use ONLY the provided extracted content and provided links.
+        - Do NOT introduce tools, facts, claims, or examples not present in the source.
+        - If a detail is missing, keep it general and explicitly avoid specifics.
+        - Preserve important source links (2–6 total) and place them naturally in:
+                - Introduction
+                - Process Breakdown
+                - Practical Example
+        - Do NOT dump an unrelated link list.
+        - Ensure all main points from the source are explicitly covered.
+        - If a source claim cannot be verified, state that clearly.
+
+────────────────────────────────────────
+STYLE, SEO & FORMAT RULES
+────────────────────────────────────────
+
+- Total word count must stay between {lower}–{upper}.
+- Use H2 headings only where specified (no H1).
+- Use H3 headings for steps, items, or sub-sections.
+- One idea per paragraph.
+- Avoid walls of text.
+- Active voice.
+- Neutral professional tone with opinionated insight.
+- No emojis.
+- Avoid fluff or filler.
+
+SEO / LLM:
+- Primary keyword: “{primary_keyword}”
+- Use it naturally in the Introduction and in at least one H2 heading.
+- Avoid keyword stuffing.
+
+────────────────────────────────────────
+FINAL CHECK (MANDATORY)
+────────────────────────────────────────
+
+Before outputting, verify:
+- All required sections are present and in order.
+- No content is repeated across sections.
+- Voice feels human, opinionated, and experience-driven.
+- The article would feel at home on dev.to, not like a corporate blog.
+"""
 
     agent = Agent(
         name="summarizer",
-        instructions=(
-            "You are a highly experienced technical content writer with 10+ years of expertise. Summarize the supplied article into markdown "
-            f"at {lower}-{upper} words. Use clear, precise, expert, and non-vague language throughout every section. Never add fictional tools or facts. "
-            + structure
-        ),
+        instructions=structure,
         model=model,
         model_settings=ModelSettings(temperature=0.3),
     )
@@ -834,13 +1013,7 @@ def post_devto(
 ) -> dict:
     headers = {"api-key": api_key, "Content-Type": "application/json"}
 
-    # Append a short company blurb to the article body when publishing to Dev.to.
-    # The blurb can be overridden by setting the DEVTO_COMPANY_BLURB environment variable.
-    blurb = company_blurb()
-    if blurb:
-        # Avoid duplicating the blurb if it's already present in the markdown.
-        if blurb not in body_md:
-            body_md = body_md.rstrip() + "\n\n\n\n## About Infrasity\n\n" + blurb
+    # No longer append company blurb or About Infrasity section automatically.
 
     article = {
         "title": title,
@@ -898,6 +1071,33 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Actually publish (otherwise dry-run only prints payloads).",
     )
+    # Medium email and SMTP options
+    parser.add_argument(
+        "--medium-email",
+        help="Send Medium-ready HTML version to this email address (optional)."
+    )
+    parser.add_argument(
+        "--smtp-server",
+        help="SMTP server for sending Medium email (required if --medium-email is set)."
+    )
+    parser.add_argument(
+        "--smtp-port",
+        type=int,
+        default=465,
+        help="SMTP port (default 465 for SSL)."
+    )
+    parser.add_argument(
+        "--smtp-user",
+        help="SMTP username (required if --medium-email is set)."
+    )
+    parser.add_argument(
+        "--smtp-password",
+        help="SMTP password (required if --medium-email is set)."
+    )
+    parser.add_argument(
+        "--smtp-from",
+        help="Sender email address (required if --medium-email is set)."
+    )
     return parser.parse_args()
 
 
@@ -944,11 +1144,7 @@ def main() -> None:
     if banner_url and _truthy_env("INLINE_BANNER", default="0"):
         summary_md = _ensure_banner_markdown(summary_md, banner_url)
 
-    # Append the same company blurb used for publishing to the preview so
-    # the printed/dry-run markdown matches what will be posted.
-    blurb = company_blurb()
-    if blurb and blurb not in summary_md:
-        summary_md = summary_md.rstrip() + "\n\n---\n\n## About Infrasity\n\n" + blurb
+    # No longer append company blurb or About Infrasity section to preview markdown.
 
     if args.publish:
         devto_key = os.getenv("DEVTO_API_KEY")
@@ -962,6 +1158,32 @@ def main() -> None:
 
     print("Summary ready.\n---\n")
     print(summary_md)
+
+    # If requested, send Medium-ready HTML email
+    if getattr(args, "medium_email", None):
+        if not all([
+            args.smtp_server, args.smtp_user, args.smtp_password, args.smtp_from
+        ]):
+            raise RuntimeError("To send Medium email, provide --smtp-server, --smtp-user, --smtp-password, and --smtp-from.")
+        # Always prepend the banner image (if available) to the Medium email markdown for plain text part
+        medium_md = summary_md
+        if banner_url:
+            banner_md = f"![Banner]({banner_url})\n\n"
+            if not medium_md.lstrip().startswith("![Banner]("):
+                medium_md = banner_md + medium_md.lstrip("\n")
+        print(f"[medium-email] Sending Medium-ready HTML to {args.medium_email}...")
+        send_medium_email(
+            subject=f"Medium-ready: {title}",
+            markdown_content=medium_md,
+            recipient_email=args.medium_email,
+            sender_email=args.smtp_from,
+            smtp_server=args.smtp_server,
+            smtp_port=args.smtp_port,
+            smtp_user=args.smtp_user,
+            smtp_password=args.smtp_password,
+            banner_url=banner_url,
+        )
+        print("[medium-email] Sent.")
 
 
 if __name__ == "__main__":

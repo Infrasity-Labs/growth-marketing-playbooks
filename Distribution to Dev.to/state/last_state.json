@@ -3,15 +3,10 @@
     "https://www.infrasity.com/blog/developer-conferences",
     "https://www.infrasity.com/blog/tofu-mofu-bofu-marketing",
     "https://www.infrasity.com/blog/reddit-marketing-agencies",
-    "https://www.infrasity.com/blog/github-seo",
-    "https://www.infrasity.com/blog/top-10-technical-writing-service-companies",
-    "https://www.infrasity.com/blog/b2b-content-syndication",
-    "https://www.infrasity.com/blog/frameworks-for-scalable-documentation-sites",
-    "https://www.infrasity.com/blog/what-is-technical-writing"
+    "https://www.infrasity.com/blog/10-steps-to-build-content-marketing-strategy",
+    "https://www.infrasity.com/blog/reddit-marketing-strategy"
   ],
   "pending": [
-    "https://www.infrasity.com/blog/10-steps-to-build-content-marketing-strategy",
-    "https://www.infrasity.com/blog/reddit-marketing-strategy",
     "https://www.infrasity.com/blog/content-distribution-platforms",
     "https://www.infrasity.com/blog/top-10-free-outline-generators",
     "https://www.infrasity.com/blog/b2b-saas-prd",
@@ -35,6 +30,10 @@
       "error": "Exit code 1"
     },
     {
+      "url": "https://www.infrasity.com/blog/github-seo",
+      "error": "Exit code 1"
+    },
+    {
       "url": "https://www.infrasity.com/blog/how-do-you-get-karma-on-reddit",
       "error": "Exit code 1"
     },
@@ -52,6 +51,22 @@
     },
     {
       "url": "https://www.infrasity.com/blog/llms.txt",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/top-10-technical-writing-service-companies",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/b2b-content-syndication",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/frameworks-for-scalable-documentation-sites",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/what-is-technical-writing",
       "error": "Exit code 1"
     }
   ]

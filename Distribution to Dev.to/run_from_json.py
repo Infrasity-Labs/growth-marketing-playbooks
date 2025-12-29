@@ -83,6 +83,20 @@ def build_cmd(item, publish: bool):
         cmd += ["--auto-banner"]
     if publish:
         cmd += ["--publish"]
+    # Add Medium email and SMTP args from environment variables if set
+    env_vars = {
+        "MEDIUM_EMAIL": "--medium-email",
+        "SMTP_SERVER": "--smtp-server",
+        "SMTP_PORT": "--smtp-port",
+        "SMTP_USER": "--smtp-user",
+        "SMTP_PASSWORD": "--smtp-password",
+        "SMTP_FROM": "--smtp-from",
+    }
+    for env_key, arg_name in env_vars.items():
+        val = os.getenv(env_key)
+        if val:
+            # For port, ensure it's passed as string
+            cmd += [arg_name, str(val)]
     return cmd
 
 
