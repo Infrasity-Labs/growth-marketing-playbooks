@@ -848,11 +848,9 @@ Output must be markdown in this exact order:
 - This section is mandatory and must always be present at the very top.
 
 1) Introduction (140–180 words, NO heading)
-- Write a single, well-structured paragraph.
-- Open with a relatable developer frustration, realization, or moment of confusion.
-- Clearly state what the reader will learn and who this is for.
-- Include exactly one explicit definition sentence.
-- Explain why this topic matters in real developer workflows.
+- Write two short, well-structured paragraphs (around 70 words each) for better readability and engagement.
+- The first paragraph should open with a relatable developer frustration, realization, or moment of confusion, and clearly state what the reader will learn and who this is for.
+- The second paragraph should include exactly one explicit definition sentence and explain why this topic matters in real developer workflows.
 - Use clear, expert, non-vague language.
 - Write in first person where it improves clarity or credibility.
 
@@ -915,20 +913,11 @@ Audience targeting:
         BRAND MENTION CONSTRAINT (MANDATORY)
         ────────────────────────────────────────
 
-        - Infrasity may be mentioned at most ONCE in the entire article.
-        - The mention must be:
-            - First-person
-            - Contextual (partner, collaboration, or environment)
-            - Non-promotional
-        - Allowed examples:
-            - “In my work with Infrasity, I ran into…”
-            - “While collaborating with the team at Infrasity, I noticed…”
-        - Disallowed:
-            - Product descriptions
-            - Marketing claims
-            - CTAs
-            - “We at Infrasity…”
-            - Any tone implying sponsorship or sales intent
+        - Infrasity may be mentioned at most ONCE in the entire article, but ONLY if it fits naturally and contextually in the narrative or example.
+        - The mention should be subtle, contextually relevant, and never forced or awkward.
+        - If a natural mention does not fit, do not include it.
+        - Allowed: “At Infrasity, we noticed…”, “Our team at Infrasity observed…”, or a brief reference in a practical example.
+        - Disallowed: Forced insertions, promotional claims, awkward phrasing, or any tone implying sponsorship or sales intent.
 
         ────────────────────────────────────────
         GROUNDING & SOURCE RULES (MANDATORY)
