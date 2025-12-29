@@ -42,6 +42,12 @@ jobs:
           GITHUB_PATH_PREFIX=${{ secrets.GIT_PATH_PREFIX }}
           RUN_PUBLISH=${{ secrets.RUN_PUBLISH }}
           OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }}
+          MEDIUM_EMAIL=${{ secrets.MEDIUM_EMAIL }}
+          SMTP_SERVER=${{ secrets.SMTP_SERVER }}
+          SMTP_PORT=${{ secrets.SMTP_PORT }}
+          SMTP_USER=${{ secrets.SMTP_USER }}
+          SMTP_PASSWORD=${{ secrets.SMTP_PASSWORD }}
+          SMTP_FROM=${{ secrets.SMTP_FROM }}
           EOF
           # strip accidental leading spaces
           sed -E -i.bak 's/^[[:space:]]+//' "Distribution to Dev.to/.env" || true
