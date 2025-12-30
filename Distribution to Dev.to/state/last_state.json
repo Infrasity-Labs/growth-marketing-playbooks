@@ -6,20 +6,7 @@
     "https://www.infrasity.com/blog/10-steps-to-build-content-marketing-strategy",
     "https://www.infrasity.com/blog/reddit-marketing-strategy"
   ],
-  "pending": [
-    "https://www.infrasity.com/blog/content-distribution-platforms",
-    "https://www.infrasity.com/blog/top-10-free-outline-generators",
-    "https://www.infrasity.com/blog/b2b-saas-prd",
-    "https://www.infrasity.com/blog/reddit-karma-farming-vs-credibility",
-    "https://www.infrasity.com/blog/reddit-organic-vs-paid-marketing",
-    "https://www.infrasity.com/blog/best-documentation-tools-for-developers",
-    "https://www.infrasity.com/blog/reddit-b2b-marketing-strategy",
-    "https://www.infrasity.com/blog/devrel-vs-gtm-engineer",
-    "https://www.infrasity.com/blog/mintlify-vs-gitbook",
-    "https://www.infrasity.com/blog/go-to-market-agency",
-    "https://www.infrasity.com/blog/fuma-docs",
-    "https://www.infrasity.com/blog/long-tail-vs-short-tail"
-  ],
+  "pending": [],
   "error": [
     {
       "url": "https://www.infrasity.com/blog/how-to-create-a-subreddit",
@@ -67,6 +54,54 @@
     },
     {
       "url": "https://www.infrasity.com/blog/what-is-technical-writing",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/content-distribution-platforms",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/top-10-free-outline-generators",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/b2b-saas-prd",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/reddit-karma-farming-vs-credibility",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/reddit-organic-vs-paid-marketing",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/best-documentation-tools-for-developers",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/reddit-b2b-marketing-strategy",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/devrel-vs-gtm-engineer",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/mintlify-vs-gitbook",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/go-to-market-agency",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/fuma-docs",
+      "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/long-tail-vs-short-tail",
       "error": "Exit code 1"
     }
   ]
