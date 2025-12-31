@@ -6,9 +6,7 @@
     "https://www.infrasity.com/blog/10-steps-to-build-content-marketing-strategy",
     "https://www.infrasity.com/blog/reddit-marketing-strategy"
   ],
-  "pending": [
-    "https://www.infrasity.com/blog/b2b-content-marketing-strategy"
-  ],
+  "pending": [],
   "error": [
     {
       "url": "https://www.infrasity.com/blog/how-to-create-a-subreddit",
@@ -105,6 +103,10 @@
     {
       "url": "https://www.infrasity.com/blog/long-tail-vs-short-tail",
       "error": "Exit code 1"
+    },
+    {
+      "url": "https://www.infrasity.com/blog/b2b-content-marketing-strategy",
+      "error": "Not found in data file"
     }
   ]
 }
