@@ -1,0 +1,165 @@
+---
+title: "What is Kubiya?"
+description: "Unified abstraction layer for managing AI workloads—solve framework fatigue with multi-model orchestration, organizational coordination, and enterprise governance."
+icon: "rocket"
+---
+
+Kubiya is an **on-demand engineering organization** powered by AI—a unified abstraction layer for managing AI workloads at enterprise scale.
+
+Unlike point solutions that force you into specific frameworks or vendors, Kubiya understands enterprise complexities and provides unified tooling to solve real problems:
+
+* **Distributed compute workloads** with workers that scale execution
+* **Self-hosted capability** for security and compliance requirements
+* **Framework agnosticism** through multiple runtimes—no vendor lock-in
+* **MicroVM technology** that lets agents function like real engineers—they run terminal commands and use unified tooling without hard MCP wiring or protocol adjustments
+* **Task Kanban abstraction** so you can track agent value like JIRA tasks—no more wondering if agents delivered real value
+
+As new models and frameworks emerge constantly, organizations need a trusted layer that adapts without requiring a complete rebuild every time. Kubiya lets you manage AI like a real engineering organization—with teams, governance, security, and measurable KPIs. All stakeholders benefit: security teams, developers, DevOps, platform engineering, and even non-technical users.
+
+<img
+  className="block dark:hidden"
+  src="/assets/screenshots/composer/web-composer.png"
+  alt="Kubiya Platform Overview"
+/>
+<img
+  className="hidden dark:block"
+  src="/assets/screenshots/composer/web-composer.png"
+  alt="Kubiya Platform Overview - Dark Mode"
+/>
+
+## **The Challenge**
+
+The AI landscape moves fast—new models launch monthly, new frameworks emerge constantly, and organizations rebuild everything when requirements change. Teams spend more time managing AI infrastructure than delivering business value.
+
+**What's needed:** A stable abstraction layer that handles model providers, frameworks, and orchestration—so your team focuses on outcomes, not plumbing.
+
+## **How Kubiya Solves This**
+
+Kubiya provides a unified layer that abstracts complexity across four key areas:
+
+### Multi-Model Orchestration
+* Works with 100+ LLM providers (OpenAI, Anthropic, Google, Azure) through LiteLLM
+* Switch models by changing configuration, not code
+* Automatic failover and cost optimization
+
+### Framework-Agnostic Execution
+* Supports multiple runtimes (Agno, Claude Code, custom)
+* MCP protocol for standardized tool integration
+* Provider-agnostic storage (AWS, GCP, Azure)
+
+### Organizational Coordination
+* Cognitive memory enables agents to learn from each other
+* Teams work together with shared knowledge and context
+* Complete audit trails of all decisions and actions
+
+### Enterprise Governance
+* Policy-driven safety with OPA-based guardrails
+* SOC 2 Type II, GDPR, CCPA, HIPAA-ready
+* Multi-tenant isolation and zero-trust enforcement
+
+## **Who Benefits**
+
+### For Engineering Leadership
+* One platform replaces point solutions for orchestration and governance
+* Ship AI features in days, not quarters
+* Track cost, productivity gains, and cycle time reductions
+* Swap models and frameworks without rewriting applications
+
+### For Security & Compliance
+* Zero-trust enforcement with pre-approved tool access
+* Complete audit trails and policy evaluation logs
+* SOC 2 Type II, GDPR, CCPA certifications
+* Multi-tenant isolation at the database level
+
+### For Platform & DevOps
+* Works with AWS, GCP, Azure, or on-premises infrastructure
+* Flexible deployment: SaaS, self-hosted, or air-gapped
+* REST API, Terraform provider, CLI, and SDK
+* Unified observability across all AI workloads
+
+### For Developers
+* Use any LLM provider without vendor lock-in
+* MCP protocol for integrating external services
+* Agents learn automatically—no vector DB setup
+* Replay executions step-by-step for debugging
+
+## **The Platform at a Glance**
+
+Kubiya's UI mirrors how your work is organized. You can begin with our default setup and add and adjust as you grow.
+
+* **Control Plane**
+
+  The control plane is the coordination layer for everything that runs in Kubiya. It owns routing, shared configuration, and policy enforcement. Start on **Kubiya Hosted** to get running immediately; add a **Self-Hosted** control plane later when you need private networking or custom policies.
+
+* **Agents**
+
+  Configurable AI assistants that plan and run tasks. Agents can connect to MCP servers for domain-specific tools and use Skills for system capabilities. They can be attached to **multiple projects, teams, and environments** at the same time, inheriting context, credentials, and policies from each association at run time.
+
+* **Teams**
+
+  Group multiple agents to work together on complex or ongoing operations. Assign tasks to the agents and have them work together like a real team.
+
+* **Projects**
+
+  Projects provide a shared scope for ongoing goals, such as *reducing cloud costs* or *improving deployment reliability*. Within a project, you define the **goal**, assign the **agents** and **teams** that will work toward it, and configure shared **knowledge**, **resources**, and **policies**.
+
+* **Environments**
+
+  Manage environments for routing workloads across different deployment contexts. An environment specifies where Kubiya will execute work and the configuration inherited by the agents and teams that run there.
+
+* **Task Queues**
+
+  Manage durable task queues for distributed agent execution. A task queue distributes work to connected workers for execution. Queues are attached to a Control Plane and can be backed by hosted capacity or by self-hosted workers that you run in your own network.
+
+* **Task Kanban**
+
+  The Task Kanban is a real-time board where you can create new tasks, track their progress, and view live updates as they move through different stages of execution. Each task progresses through states: **Pending**, **Running**, **Waiting for Input**, **Completed**, and **Failed**.
+
+## **How Kubiya Works**
+
+<img
+  className="block dark:hidden"
+  src="/assets/architecture-overview.png"
+  alt="Kubiya Architecture"
+/>
+<img
+  className="hidden dark:block"
+  src="/assets/architecture-overview.png"
+  alt="Kubiya Architecture - Dark Mode"
+/>
+
+1. **Create a Control Plane**
+
+   Choose **Kubiya Hosted** (default) or create a self-hosted control plane. The control plane provides the runtime configuration: MCP servers, Skills, model settings, policies, and context.
+
+2. **Define Agents & Teams**
+
+   Create AI agents with specific capabilities and group them into teams that collaborate on tasks. Attach integrations, Skills, and permissions the team inherits at run time.
+
+3. **Create Projects**
+
+   Organize work by objective or domain. Add project-level goals, context (knowledge and resources), and constraints that apply to executions.
+
+4. **Provision Task Queues**
+
+   Create task queues bound to your control plane. Use **Kubiya-hosted** capacity to start immediately, or connect **self-hosted workers** for private network access.
+
+5. **Execute and Observe**
+
+   When you trigger a task, Kubiya interprets your request in the context of its project, team, and environment. It plans safe steps and executes them in isolated containers. You can monitor every run in real time with detailed logs and execution history.
+
+Each task runs independently with built-in isolation that prevents failures from affecting other operations.
+
+## **Security and Governance**
+
+* **Isolation:** Every task runs in a secure, isolated execution environment
+* **Least privilege:** Credentials and access are scoped per task within the assigned environment
+* **Policy controls:** Apply guardrails at the project or environment level
+* **Auditability:** Inputs, outputs, and logs are captured for full traceability
+* **Compliance:** SOC 2 Type II, GDPR, CCPA, with HIPAA support for self-hosted deployments
+
+<br/>
+
+import ChatWidget from '/components/ChatWidget.mdx';
+
+<ChatWidget />

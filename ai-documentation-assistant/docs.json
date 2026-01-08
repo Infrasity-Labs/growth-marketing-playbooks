@@ -1,0 +1,112 @@
+{
+  "name": "Kubiya",
+  "logo": {
+    "dark": "https://cdn.prod.website-files.com/66ac05ef155399c0a0aee1f3/66b0f51732cdea36676e099a_kubiya.ai.svg",
+    "light": "https://hrkldgcnsxl9tiki.public.blob.vercel-storage.com/kubiya.ai.svg"
+  },
+  "favicon": "/assets/favicon.png",
+  "colors": {
+    "primary": "#c084fc",
+    "light": "#c084fc",
+    "dark": "#c084fc"
+  },
+  "navbar": {
+    "links": [
+      { "label": "Home", "href": "https://www.kubiya.ai/", "icon": "home" },
+      { "label": "GitHub", "href": "https://github.com/kubiyabot/", "icon": "github" },
+      { "label": "Dashboard", "href": "https://compose.kubiya.ai", "icon": "grid" }
+    ]
+  },
+  "footer": {
+    "socials": {
+      "linkedin": "https://www.linkedin.com/company/kubiya/",
+      "github": "https://github.com/kubiyabot/",
+      "website": "https://www.kubiya.ai/"
+    }
+  },
+  "contextual": { "options": ["copy", "view", "chatgpt", "claude"] },
+  "api": {
+    "mdx": {
+      "server": ["https://control-plane.kubiya.ai", "http://localhost:8001"],
+      "auth": { "method": "key", "name": "Authorization" }
+    }
+  },
+  "openapi": ["https://control-plane.kubiya.ai/api/openapi.json"],
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          { "group": "Introduction", "pages": ["introduction/what-is-kubiya"] },
+          { "group": "Quick Start", "pages": ["quickstart/get-started"] },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "core-concepts/overview",
+              "core-concepts/agents"
+            ]
+          },
+          { "group": "Infrastructure", "pages": ["infrastructure/integrations"] }
+        ]
+      },
+      {
+        "tab": "APIs",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["api-reference/overview"]
+          }
+        ]
+      },
+      {
+        "tab": "SDKs",
+        "groups": [
+          {
+            "group": "Guides",
+            "pages": [
+              "sdk/overview",
+              "sdk/best-practices"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "CLI",
+        "groups": [
+          {
+            "group": "Guides",
+            "pages": [
+              "cli/overview",
+              "cli/installation"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Terraform",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": ["terraform/overview"]
+          }
+        ]
+      },
+      {
+        "tab": "MCP Server",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["mcp/overview"]
+          }
+        ]
+      }
+    ],
+    "dropdowns": []
+  },
+  "search": { "prompt": "Ask me anything about Kubiya..." },
+  "theme": "mint",
+  "redirects": [
+    { "source": "/getting-started", "destination": "/quickstart/get-started" },
+    { "source": "/core-concepts", "destination": "/core-concepts/overview" }
+  ]
+}
