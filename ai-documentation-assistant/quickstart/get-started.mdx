@@ -1,0 +1,144 @@
+---
+title: "Get Started?"
+description: "Get started with Kubiya in 5 Minutes"
+icon: "clock"
+---
+
+This quickstart shows the fastest path to your first successful run using **Kubiya**. No terminals, no SDKs, no prior integrations.
+
+**Outcome:** you will create a minimal setup (hosted control plane, one agent, one team), run a task from plain English, watch it execute step-by-step,
+
+**Time to complete:** \~5 minutes
+
+## **Before you begin**
+
+* Sign in to Kubiya [compose.kubiya.ai](http://compose.kubiya.ai)
+* In the top-left control-plane selector, keep **Kubiya Hosted**.
+
+<img
+  className="block dark:hidden"
+  src="/assets/screenshots/composer/web-composer.png"
+  alt="Kubiya Platform Overview"
+/>
+<img
+  className="hidden dark:block"
+  src="/assets/screenshots/composer/web-composer.png"
+  alt="Kubiya Platform Overview - Dark Mode"
+/>
+
+This gives you a ready-to-use control plane and hosted workers.
+
+Tip: Start with the hosted defaults. You can introduce self-hosted control planes and workers whenever you need private connectivity or custom governance.
+
+## **1\) Confirm the default environment**
+
+Open **Environments** in the left navigation.
+
+* Make sure you have a **Default Environment** in a **Ready** state.
+* For this quickstart, you will use the default environment. (Later, you can create your own environment and add environment variables, secrets, policies, Skills, and context.)
+
+## **2\) Create an agent**
+
+Go to **Agents \> Create Agent**.
+
+<img
+  className="block dark:hidden"
+  src="/assets/screenshots/composer/new-agent.png"
+  alt="Kubiya Platform Overview"
+/>
+<img
+  className="hidden dark:block"
+  src="/assets/screenshots/composer/new-agent.png"
+  alt="Kubiya Platform Overview - Dark Mode"
+/>
+
+* **Name:** for example, `Code Assistant`
+* **Description:** Something simple like `“Help me out with coding and technical stuff”`
+* **AI Model:** Use the recommended **Claude Sonnet 4**. All models are hosted within Kubiya.
+* **Capabilities:** Comma-separated tags describing what this agent can do. Like: `coding, monitoring`
+* **MCP / Skills:** in the Tools tab, assign Skills: **Python Runtime**, **Shell \- Full Access** and **File System \- Full Access**. This will enable your Agent to create and run Python scripts.
+
+Save the agent.
+
+## **3\) Create a team and add your agent (optional)**
+
+Go to **Teams \> Create Team**.
+
+<img
+  className="block dark:hidden"
+  src="/assets/screenshots/composer/new-team.png"
+  alt="Kubiya Platform Overview"
+/>
+<img
+  className="hidden dark:block"
+  src="/assets/screenshots/composer/new-team.png"
+  alt="Kubiya Platform Overview - Dark Mode"
+/>
+
+* Give a name to the team like `Assistant Squad`
+* In the **Members** section, add the agent you just created.
+* Save.
+  Teams provide an execution boundary and inherit the environment configuration and tools. Create teams to group multiple agents together, so that the right task can be assigned to the required agent within the team.
+
+## **4\) Run your first task in the Composer**
+
+Open **Task Kanban** and click **New Task**.
+
+<img
+  className="block dark:hidden"
+  src="/assets/screenshots/composer/configure-task.png"
+  alt="Kubiya Platform Overview"
+/>
+<img
+  className="hidden dark:block"
+  src="/assets/screenshots/composer/configure-task.png"
+  alt="Kubiya Platform Overview - Dark Mode"
+/>
+
+In the chat box, describe a simple goal, for example:
+
+“Create a Python program that pings a URL every 5 seconds and returns the output.”
+
+What happens behind the scenes:
+
+1. The agent interprets your goal using the team/project context.
+2. Kubiya plans safe steps and compiles them into a deterministic, containerized workflow.
+3. Hosted workers execute each step in isolation.
+4. You see real-time events, logs, and status for every step.
+
+<img
+  className="block dark:hidden"
+  src="/assets/screenshots/composer/task.png"
+  alt="Kubiya Platform Overview"
+/>
+<img
+  className="hidden dark:block"
+  src="/assets/screenshots/composer/task.png"
+  alt="Kubiya Platform Overview - Dark Mode"
+/>
+
+Once you **approve** the task, the agent automatically performs all required actions, from setup to execution, following the defined workflow plan. When the task completes, you can review its results, provide new input to continue the flow, or simply mark it as **Complete** to close it out.
+
+## **What you used (and why it works)**
+
+* **Hosted Control Plane:** central coordination with zero setup.
+* **Agent:** understands goals and proposes safe, deterministic steps.
+* **Team:** groups agents and inherits environment/tooling.
+* **Hosted Workers:** execute steps in isolated containers with streaming logs.
+
+This design ensures the same input follows the same execution path, with clear logs and isolation between steps.
+
+## **Next steps**
+
+When you’re ready to go beyond the quickstart, explore the core components that make up the Kubiya platform:
+
+* [**Control Planes**](/core-concepts/control-plane): The coordination layer that manages routing, configuration, and policy enforcement across your organization.
+* [**Agents**](/core-concepts/agents): The intelligent executors that plan and perform tasks using configured models, tools, and context.
+* [**Teams**](/core-concepts/teams): Groups of agents that collaborate on complex or continuous operations under shared settings and permissions.
+* [**Policies**](/core-concepts/policies): Guardrails defined with OPA to enforce compliance, access control, and safe execution boundaries.
+* [**Skills**](/core-concepts/skills): Collections of system capabilities that define what agents can do during task execution.
+* [**Projects**](/core-concepts/projects): Shared scopes that align agents and teams around specific goals, knowledge, and governance.
+* [**Environments**](/core-concepts//environments): Routing contexts that define where work executes and what configuration, credentials, and policies apply.
+* [**Task Queues**](/core-concepts/execution-infrastructure/task-queues): The execution backbone that manages distributed task processing through hosted or self-hosted workers.
+
+With these components in place, you have a complete foundation for scaling from simple tasks to autonomous, policy-driven engineering operations.
