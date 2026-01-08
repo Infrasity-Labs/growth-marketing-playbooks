@@ -45,6 +45,24 @@ Primary goals:
 
 ---
 
+## Project Structure
+
+```
+ai-documentation-assistant/
+├── backend/                # Flask API, RAG pipeline, vector DB logic
+├── core-concepts/          # MDX documentation content
+├── introduction/           # Introduction docs
+├── quickstart/             # Getting started docs
+├── assets/
+│   └── images/             # README screenshots and diagrams
+├── .gitignore
+├── chat-widget.js          # Frontend chat widget
+├── docs.json               # Mintlify configuration
+└── README.md               # Project documentation
+```
+
+---
+
 ## Built With
 
 ### Frontend
