@@ -1,675 +1,360 @@
 # AI-Powered Documentation Assistant for Kubiya Docs
 
-An intelligent documentation chatbot built with Retrieval-Augmented Generation (RAG) that provides instant, context-aware answers from Kubiya documentation using local LLMs via Ollama.
+An intelligent documentation assistant built using Retrieval-Augmented Generation (RAG). The system provides fast, accurate, and source-backed answers directly from Kubiya documentation using a fully local AI stack powered by Ollama.
+
+This project demonstrates how modern documentation platforms can embed AI search and conversational assistance without external APIs, ensuring privacy, performance, and full control over infrastructure.
+
+---
 
 ## Table of Contents
 
-- [Overview](#overview)
-- [Features](#features)
+- [About The Project](#about-the-project)
+- [Built With](#built-with)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Product Walkthrough](#product-walkthrough)
+  - [Ask AI Interface](#ask-ai-interface)
+  - [AI Response and Source Attribution](#ai-response-and-source-attribution)
 - [Architecture](#architecture)
-- [Prerequisites](#prerequisites)
-- [Installation](#installation)
-- [Configuration](#configuration)
-- [Usage](#usage)
-- [Project Structure](#project-structure)
-- [Technical Details](#technical-details)
-- [Troubleshooting](#troubleshooting)
-- [Deployment](#deployment)
 - [Contributing](#contributing)
 - [License](#license)
 
-## Overview
+---
 
-This project implements an AI-powered assistant that integrates directly into Mintlify documentation pages. Users can ask natural language questions and receive accurate answers derived exclusively from the official Kubiya documentation, with full source citations for transparency and verification.
+## About The Project
 
-The system uses a Retrieval-Augmented Generation (RAG) pipeline to ensure responses are grounded in actual documentation content rather than relying on pre-trained knowledge that may be outdated or inaccurate.
+This project is an AI-powered documentation assistant integrated into the Kubiya documentation site.  
+Users can ask natural language questions and receive accurate responses grounded exclusively in the official documentation.
 
-## Features
+Instead of relying on pre-trained knowledge, the assistant uses a Retrieval-Augmented Generation pipeline that:
 
-### Core Functionality
+- Indexes documentation files into a vector database
+- Performs semantic search for relevant context
+- Generates answers using a local LLM
+- Returns citations to the original source files
 
-- **Interactive Chat Interface**: Slide-in panel with conversational UI matching Kubiya brand guidelines
-- **Contextual Question Answering**: Retrieves and synthesizes information from relevant documentation sections
-- **Source Attribution**: Every answer includes citations to specific documentation files with content previews
-- **Local Processing**: All computation happens locally without external API dependencies
-- **Fast Response Times**: Optimized for 2-4 second query-to-answer latency
-- **Persistent Knowledge Base**: Vector database cached on disk for rapid startup (2 seconds after initial build)
+The result is reliable documentation search with explainability and traceability.
 
-### User Experience
+Primary goals:
 
-- **Example Questions**: Pre-populated suggestions to guide users
-- **Typing Indicators**: Visual feedback during processing
-- **Responsive Design**: Full functionality across desktop, tablet, and mobile devices
-- **Dark Mode Support**: Automatic theme adaptation based on user preferences
-- **Conversation History**: Maintains context within the chat session
+- Improve developer experience when navigating large documentation
+- Reduce manual search and page hopping
+- Provide instant, contextual answers
+- Maintain full local deployment with zero external API dependency
 
-## Architecture
+---
 
-### System Architecture Diagram
+## Project Structure
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         USER / CLIENT LAYER                             │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    │ HTTP/HTTPS
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        PRESENTATION LAYER                               │
-│  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │  Mintlify Documentation Portal (Port 3000)                       │  │
-│  │  ┌────────────────────────────────────────────────────────────┐ │  │
-│  │  │  📄 MDX Files (Docs Content)                               │ │  │
-│  │  │  • introduction/what-is-kubiya.mdx                         │ │  │
-│  │  │  • quickstart/get-started.mdx                              │ │  │
-│  │  │  • core-concepts/*.mdx                                     │ │  │
-│  │  └────────────────────────────────────────────────────────────┘ │  │
-│  │                                                                  │  │
-│  │  ┌────────────────────────────────────────────────────────────┐ │  │
-│  │  │  💬 Chat Widget (chat-widget.js)                           │ │  │
-│  │  │  • Floating "Ask AI" button                                │ │  │
-│  │  │  • Slide-in chat panel                                     │ │  │
-│  │  │  • Message history & typing indicator                      │ │  │
-│  │  │  • Source citations display                                │ │  │
-│  │  └────────────────────────────────────────────────────────────┘ │  │
-│  └──────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    │ REST API (POST /api/ask)
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        APPLICATION LAYER                                │
-│  ┌──────────────────────────────────────────────────────────────────┐  │
-│  │  Flask Web Server (Port 5000)                                    │  │
-│  │  ┌────────────────────────────────────────────────────────────┐ │  │
-│  │  │  API Endpoints:                                            │ │  │
-│  │  │  • POST /api/ask    - Answer questions                     │ │  │
-│  │  │  • GET  /api/health - Health check                         │ │  │
-│  │  └────────────────────────────────────────────────────────────┘ │  │
-│  │                                                                  │  │
-│  │  ┌────────────────────────────────────────────────────────────┐ │  │
-│  │  │  🔗 LangChain RAG Pipeline (app.py)                        │ │  │
-│  │  │  ┌──────────────────────────────────────────────────────┐ │ │  │
-│  │  │  │ 1. Document Loader                                   │ │ │  │
-│  │  │  │    • DirectoryLoader (MDX files)                     │ │ │  │
-│  │  │  │    • TextSplitter (chunk_size=400)                   │ │ │  │
-│  │  │  └──────────────────────────────────────────────────────┘ │ │  │
-│  │  │  ┌──────────────────────────────────────────────────────┐ │ │  │
-│  │  │  │ 2. Query Handler                                     │ │ │  │
-│  │  │  │    • Question embedding                              │ │ │  │
-│  │  │  │    • Similarity search (k=1)                         │ │ │  │
-│  │  │  │    • Context retrieval                               │ │ │  │
-│  │  │  └──────────────────────────────────────────────────────┘ │ │  │
-│  │  │  ┌──────────────────────────────────────────────────────┐ │ │  │
-│  │  │  │ 3. Response Generator                                │ │ │  │
-│  │  │  │    • Prompt construction                             │ │ │  │
-│  │  │  │    • LLM inference                                   │ │ │  │
-│  │  │  │    • Source extraction                               │ │ │  │
-│  │  │  └──────────────────────────────────────────────────────┘ │ │  │
-│  │  └────────────────────────────────────────────────────────────┘ │  │
-│  └──────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                    ┌───────────────┴───────────────┐
-                    │                               │
-                    ▼                               ▼
-┌──────────────────────────────────┐  ┌──────────────────────────────────┐
-│       DATA / STORAGE LAYER       │  │      AI / MODEL LAYER            │
-│  ┌────────────────────────────┐  │  │  ┌────────────────────────────┐ │
-│  │  ChromaDB (Vector Store)   │  │  │  │  Ollama (LLM Runtime)      │ │
-│  │  • Embeddings storage      │  │  │  │  Port: 11434               │ │
-│  │  • Similarity search       │  │  │  │  ┌──────────────────────┐  │ │
-│  │  • Persistence layer       │  │  │  │  │ llama3.2:1b (800MB)  │  │ │
-│  │  Location: ./chroma_db/    │  │  │  │  │ • Fast inference     │  │ │
-│  │  ┌──────────────────────┐  │  │  │  │  │ • Low memory         │  │ │
-│  │  │ Document Chunks:     │  │  │  │  │  │ • Temperature: 0.7   │  │ │
-│  │  │ • Text content       │  │  │  │  │  └──────────────────────┘  │ │
-│  │  │ • Embeddings         │  │  │  │  │                            │ │
-│  │  │ • Metadata           │  │  │  │  │  ┌──────────────────────┐  │ │
-│  │  │ • Source file paths  │  │  │  │  │  │ all-minilm (45MB)    │  │ │
-│  │  └──────────────────────┘  │  │  │  │  │ • Text embeddings    │  │ │
-│  └────────────────────────────┘  │  │  │  │ • 384 dimensions     │  │ │
-└──────────────────────────────────┘  │  │  └──────────────────────┘  │ │
-                                      │  └────────────────────────────┘ │
-                                      └──────────────────────────────────┘
+ai-documentation-assistant/
+├── backend/                # Flask API, RAG pipeline, vector DB logic
+├── core-concepts/          # MDX documentation content
+├── introduction/           # Introduction docs
+├── quickstart/             # Getting started docs
+├── assets/
+│   └── images/             # README screenshots and diagrams
+├── .gitignore
+├── chat-widget.js          # Frontend chat widget
+├── docs.json               # Mintlify configuration
+└── README.md               # Project documentation
+```
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         DEPLOYMENT OPTIONS                              │
-│                                                                         │
-│  Local Development:                   Production:                      │
-│  • Windows/macOS/Linux               • Docker containers              │
-│  • Python 3.11+ runtime              • Kubernetes orchestration       │
-│  • Node.js 18+ for Mintlify          • Load balancer (Nginx)          │
-│  • Ollama service                    • GPU acceleration (optional)    │
-│                                      • Monitoring (Prometheus)        │
-└─────────────────────────────────────────────────────────────────────────┘
+---
 
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         DATA FLOW                                       │
-│                                                                         │
-│  1. User types question in chat widget                                 │
-│  2. Frontend sends POST to /api/ask                                    │
-│  3. Backend embeds question using all-minilm                           │
-│  4. ChromaDB retrieves top relevant chunks                             │
-│  5. LangChain formats prompt with context                              │
-│  6. Ollama generates answer using llama3.2:1b                          │
-│  7. Backend extracts sources and formats response                      │
-│  8. Frontend displays answer + sources in chat                         │
-│                                                                         │
-│  ⏱️  Total time: 2-4 seconds                                            │
-└─────────────────────────────────────────────────────────────────────────┘
+## Built With
 
-### Technology Stack
+### Frontend
 
-**Frontend Technologies:**
-- **Mintlify**: Documentation framework and static site generator
-- **Vanilla JavaScript**: Chat widget implementation
-- **CSS3**: Styling and animations
-- **Fetch API**: Asynchronous HTTP requests
+- Mintlify Documentation Platform
+- Vanilla JavaScript
+- HTML5 and CSS3
+- Fetch API
 
-**Backend Technologies:**
-- **Python 3.11**: Primary programming language
-- **Flask**: Lightweight WSGI web framework
-- **Flask-CORS**: Cross-origin resource sharing handling
-- **LangChain**: RAG orchestration and chain management
-- **LangChain-Community**: Integration modules for Ollama and ChromaDB
+### Backend
 
-**AI/ML Components:**
-- **Ollama**: Local LLM runtime environment
-- **Llama 3.2 (1B parameters)**: Primary language model for answer generation
-- **all-minilm**: Sentence transformer for embedding generation
-- **ChromaDB**: Vector database for semantic search
+- Python 3.11
+- Flask
+- Flask-CORS
+- LangChain
+- LangChain Community Integrations
 
-**Development Tools:**
-- **Git**: Version control
-- **npm**: Package management for frontend dependencies
-- **pip**: Package management for Python dependencies
+### AI and Data
 
-## Prerequisites
+- Ollama (Local LLM runtime)
+- Llama 3.2 (Text generation model)
+- all-MiniLM (Embedding model)
+- ChromaDB (Vector database)
 
-### System Requirements
+### Tooling
 
-- **Operating System**: Windows 10/11, macOS 10.15+, or Linux (Ubuntu 20.04+)
-- **RAM**: Minimum 4GB, recommended 8GB
-- **Storage**: 5GB free space for models and data
-- **CPU**: Multi-core processor recommended for faster inference
+- Git
+- npm
+- pip
+- Virtualenv
 
-### Software Dependencies
+---
 
-- **Python**: Version 3.11 or higher
-- **Node.js**: Version 18 or higher
-- **npm**: Version 9 or higher
-- **Ollama**: Latest stable release
-- **Git**: For version control
+## Getting Started
 
-## Installation
+Follow these instructions to run the project locally.
 
-### Step 1: Clone Repository
+### Prerequisites
+
+Ensure the following software is installed:
+
+- Python 3.11 or higher
+- Node.js 18 or higher
+- npm
+- Git
+- Ollama (latest version)
+
+System recommendations:
+
+- Minimum 8 GB RAM
+- At least 5 GB free disk space
+- Windows, macOS, or Linux
+
+---
+
+### Installation
+
+#### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Infrasity-Labs/demo-docs.git
-cd demo-docs
+git clone https://github.com/Infrasity-Labs/growth-marketing-playbooks.git
+cd growth-marketing-playbooks/ai-documentation-assistant
 ```
 
-### Step 2: Install Ollama
+#### 2. Install Ollama
 
-Download and install Ollama from the official website: [https://ollama.ai](https://ollama.ai)
+Download and install Ollama from the [official website](https://ollama.ai).
 
-After installation, verify:
+Verify installation:
 
 ```bash
 ollama --version
 ```
 
-### Step 3: Download Required Models
+#### 3. Download Models
 
 ```bash
-# Download the language model (800MB)
 ollama pull llama3.2:1b
-
-# Download the embedding model (45MB)
 ollama pull all-minilm
-
-# Verify installation
 ollama list
 ```
 
-### Step 4: Setup Backend
+#### 4. Backend Setup
 
 ```bash
 cd backend
 
-# Create virtual environment (recommended)
 python -m venv venv
 
 # Activate virtual environment
-# Windows:
+# Windows
 venv\Scripts\activate
-# macOS/Linux:
+
+# macOS / Linux
 source venv/bin/activate
 
-# Install Python dependencies
 pip install flask flask-cors langchain langchain-community chromadb
-
-# Verify installation
-python -c "import flask, langchain, chromadb; print('Dependencies installed successfully')"
 ```
 
-### Step 5: Setup Frontend
+#### 5. Frontend Setup
 
 ```bash
-# Install Mintlify CLI globally
 npm install -g mintlify
-
-# Verify installation
 mintlify --version
 ```
 
-### Step 6: Initialize Services
+#### 6. Start Services
 
-**Terminal 1 - Start Ollama Service:**
+Open three terminals.
+
+**Terminal 1 – Ollama**
 
 ```bash
 ollama serve
 ```
 
-**Terminal 2 - Start Backend Server:**
+**Terminal 2 – Backend**
 
 ```bash
 cd backend
 python app.py
 ```
 
-Expected output:
-
-```
-Initializing AI backend...
-Models initialized
-
-============================================================
- Kubiya Documentation AI Backend
-============================================================
-
-Step 1: Checking for existing vector database...
-   Found existing vector database
-   Loading from disk (takes 2-3 seconds)...
-   Loaded 334 document chunks from existing database
-
-Step 2: Setting up QA system...
-   QA system ready!
-
-RAG setup complete!
-
-Starting Flask server...
-   Backend URL: http://localhost:5000
-   Ready to receive questions!
-```
-
-**Terminal 3 - Start Frontend:**
+**Terminal 3 – Frontend**
 
 ```bash
 mintlify dev
 ```
 
-Expected output:
+Access the documentation site:
 
 ```
-Starting Mintlify...
-Ready on http://localhost:3000
+http://localhost:3000
 ```
+## Product Walkthrough
 
-## Configuration
-
-### Backend Configuration
-
-Edit `backend/app.py` to customize model parameters:
-
-```python
-# Language Model Configuration
-llm = Ollama(
-    model="llama3.2:1b",                    # Model name
-    base_url="http://localhost:11434",     # Ollama API endpoint
-    temperature=0.7,                        # Response creativity (0.0-1.0)
-    num_ctx=512,                            # Context window size
-)
-
-# Embedding Model Configuration
-embeddings = OllamaEmbeddings(
-    model="all-minilm",
-    base_url="http://localhost:11434"
-)
-
-# Retrieval Configuration
-retriever = vectorstore.as_retriever(
-    search_kwargs={"k": 1}                  # Number of chunks to retrieve
-)
-```
-
-### Frontend Configuration
-
-Edit `chat-widget.js` to customize UI settings:
-
-```javascript
-const CONFIG = {
-  API_URL: 'http://localhost:5000/api/ask',  // Backend endpoint
-  THEME_COLOR: '#c084fc',                    // Primary color
-  GRADIENT: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'  // Gradient
-};
-```
-
-### Environment Variables
-
-Create a `.env` file in the backend directory:
-
-```env
-FLASK_ENV=development
-FLASK_DEBUG=True
-OLLAMA_HOST=http://localhost:11434
-CHROMA_PERSIST_DIRECTORY=./chroma_db
-LOG_LEVEL=INFO
-```
-
-## Usage
-
-### Basic Usage
-
-1. Navigate to [http://localhost:3000](http://localhost:3000) in your web browser
-2. Look for the "Ask AI" button in the bottom-right corner
-3. Click the button to open the chat panel
-4. Type your question in the input field
-5. Press Enter or click the send button
-6. View the AI-generated answer and source citations
-
-### Example Questions
-
-- What is Kubiya?
-- How do I get started with Kubiya?
-- Explain Kubiya agents
-- What are the core concepts?
-- How do I integrate Kubiya with my workflow?
-
-### API Usage
-
-**Endpoint**: `POST /api/ask`
-
-**Request Format:**
-
-```json
-{
-  "question": "What is Kubiya?"
-}
-```
-
-**Response Format:**
-
-```json
-{
-  "answer": "Kubiya is an AI-powered platform...",
-  "sources": [
-    {
-      "file": "introduction/what-is-kubiya.mdx",
-      "preview": "Kubiya is a conversational AI platform..."
-    }
-  ],
-  "question": "What is Kubiya?"
-}
-```
-
-**cURL Example:**
-
-```bash
-curl -X POST http://localhost:5000/api/ask \
-  -H "Content-Type: application/json" \
-  -d '{"question": "What is Kubiya?"}'
-```
-
-## Project Structure
-
-```
-demo-docs/
-├── backend/
-│   ├── app.py                    # Flask server and RAG pipeline
-│   ├── chroma_db/                # Vector database (auto-generated)
-│   │   ├── chroma.sqlite3        # SQLite database
-│   │   └── ...                   # Embedding data
-│   └── requirements.txt          # Python dependencies
-│
-├── introduction/
-│   ├── what-is-kubiya.mdx        # Documentation content
-│   └── ...
-│
-├── quickstart/
-│   ├── get-started.mdx
-│   └── ...
-│
-├── core-concepts/
-│   ├── agents.mdx
-│   └── ...
-│
-├── chat-widget.js                # Frontend chat UI
-├── mint.json                     # Mintlify configuration
-├── .gitignore                    # Git ignore rules
-├── README.md                     # This file
-└── LICENSE                       # License information
-```
-
-## Technical Details
-
-### Document Processing Pipeline
-
-**1. Ingestion Phase:**
-
-- Directory scanning for MDX files
-- Content extraction using TextLoader
-- Document splitting into 400-character chunks with 40-character overlap
-- Filtering of non-documentation files (backend, node_modules, etc.)
-- Metadata extraction (source file, creation date, etc.)
-
-**2. Embedding Phase:**
-
-- Chunk text normalization
-- Embedding generation using all-minilm model
-- Vector storage in ChromaDB with metadata
-- Index creation for efficient similarity search
-
-**3. Query Phase:**
-
-- Question preprocessing and normalization
-- Query embedding generation
-- Cosine similarity computation against stored vectors
-- Top-k relevant chunk retrieval
-- Context assembly for LLM prompt
-
-### Prompt Engineering
-
-The system uses a carefully crafted prompt template:
-
-```python
-prompt_template = """You are a Kubiya documentation assistant. Answer briefly and accurately based on the context below.
-
-Context: {context}
-
-Question: {question}
-
-Answer (be concise):"""
-```
-
-This template ensures:
-
-- Responses are grounded in documentation
-- Answers remain focused and concise
-- Context is properly utilized
-- Hallucinations are minimized
-
-### Error Handling
-
-The system implements comprehensive error handling:
-
-- **Network Errors**: Graceful degradation with user-friendly messages
-- **Model Errors**: Fallback responses when LLM unavailable
-- **Memory Errors**: Automatic retry with smaller context
-- **Validation Errors**: Input sanitization and validation
-- **Logging**: Detailed error logs for debugging
-
-## Troubleshooting
-
-### Common Issues
-
-**Issue**: Ollama not responding
-- **Solution**: Ensure Ollama service is running with `ollama serve`
-- **Check**: Verify with `curl http://localhost:11434/api/tags`
-
-**Issue**: Backend fails to start
-- **Solution**: Check Python version (must be 3.11+)
-- **Solution**: Verify all dependencies are installed: `pip list`
-
-**Issue**: Frontend can't connect to backend
-- **Solution**: Verify backend is running on port 5000
-- **Solution**: Check CORS settings in `app.py`
-
-**Issue**: Slow response times
-- **Solution**: Consider using a more powerful model or GPU acceleration
-- **Solution**: Reduce chunk retrieval count in retriever configuration
-
-**Issue**: Vector database not persisting
-- **Solution**: Check write permissions for `./chroma_db/` directory
-- **Solution**: Verify disk space availability
-
-## Deployment
-
-### Production Considerations
-
-**Security:**
-- Enable CORS only for specific domains
-- Implement rate limiting (e.g., 10 requests/minute per IP)
-- Add authentication for sensitive documentation
-- Use HTTPS for all communications
-- Sanitize user inputs to prevent injection attacks
-
-**Performance:**
-- Use production WSGI server (Gunicorn or uWSGI)
-- Enable response caching for common questions
-- Implement request queuing for high traffic
-- Consider GPU acceleration for faster inference
-- Use CDN for static assets
-
-**Monitoring:**
-- Set up logging aggregation (ELK Stack, Splunk)
-- Implement health checks and alerts
-- Track response times and error rates
-- Monitor resource usage (CPU, RAM, disk)
-- Set up uptime monitoring
-
-### Docker Deployment
-
-Create `Dockerfile`:
-
-```dockerfile
-FROM python:3.11-slim
-
-WORKDIR /app
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Ollama
-RUN curl -fsSL https://ollama.ai/install.sh | sh
-
-# Copy backend files
-COPY backend/ /app/backend/
-COPY requirements.txt /app/
-
-# Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Pull models
-RUN ollama pull llama3.2:1b && ollama pull all-minilm
-
-EXPOSE 5000
-
-CMD ["python", "backend/app.py"]
-```
-
-### Production Deployment with Gunicorn
-
-```bash
-# Install Gunicorn
-pip install gunicorn
-
-# Run with 4 worker processes
-gunicorn -w 4 -b 0.0.0.0:5000 backend.app:app
-
-# With configuration file
-gunicorn -c gunicorn_config.py backend.app:app
-```
-
-## Contributing
-
-We welcome contributions to improve this project. Please follow these guidelines:
-
-### Development Setup
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/your-feature-name`)
-3. Make your changes with clear commit messages
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request with detailed description
-
-### Code Standards
-
-- Follow PEP 8 for Python code
-- Use meaningful variable and function names
-- Add docstrings for all functions and classes
-- Include type hints where applicable
-- Write unit tests for new features
-- Update documentation for API changes
-
-### Pull Request Process
-
-1. Update README.md with details of changes
-2. Update version numbers in relevant files
-3. Ensure CI/CD pipeline passes
-4. Request review from maintainers
-5. Address review comments promptly
-
-## License
-
-This project is part of Infrasity Labs growth marketing playbooks. All rights reserved.
-
-## Credits
-
-### Development Team
-
-- **Gaurav** - Lead Developer & AI Integration
-
-### Technologies
-
-- **Ollama** - Local LLM runtime
-- **LangChain** - RAG framework
-- **ChromaDB** - Vector database
-- **Mintlify** - Documentation platform
-- **Flask** - Web framework
-
-### Model Credits
-
-- **Meta AI** - Llama 3.2 language model
-- **Sentence Transformers** - all-minilm embedding model
-
-## Support
-
-For questions, issues, or feature requests, please contact the Infrasity Labs team or open an issue on GitHub.
-
-## Acknowledgments
-
-Special thanks to the open-source community for providing the foundational technologies that make this project possible.
+This section explains how the Ask AI feature works from a user perspective.
 
 ---
 
-**Version**: 1.0.0  
-**Last Updated**: January 8, 2025  
-**Maintained by**: Infrasity Labs
+### Ask AI Interface
 
+![Ask AI Interface](assets/images/img1.png)
 
+The Ask AI interface appears as a floating button inside the documentation website. When clicked, it opens a slide-in chat panel where users can interact with the documentation assistant.
+
+**Key elements:**
+
+- Clean chat interface aligned with the documentation theme
+- Input box for natural language questions
+- Quick suggestion buttons for first-time users
+- Scrollable conversation history
+- Send button and keyboard submission support
+
+The interface also displays suggested starter questions to help users understand what they can ask.
+
+**Example starter questions shown in the UI:**
+
+- What is Kubiya?
+- How do I get started?
+- Tell me about agents
+
+#### Additional Sample Questions for Testing
+
+You can use the following queries to validate the system:
+
+- What is Kubiya and what problem does it solve?
+- How does Kubiya manage AI workloads?
+- What are Kubiya agents?
+- How do I get started with Kubiya?
+- What are the core concepts in Kubiya?
+- How does Kubiya handle orchestration?
+- What integrations does Kubiya support?
+- What is the purpose of the MCP server?
+- How does Kubiya handle enterprise governance?
+- What APIs are available in Kubiya?
+
+These questions demonstrate search accuracy, retrieval quality, and response grounding.
+
+---
+
+### AI Response and Source Attribution
+
+![AI Response with Sources](assets/images/img2.png)
+
+When a user submits a question:
+
+1. The query is sent to the backend API
+2. The query is embedded into a vector representation
+3. The vector database performs semantic similarity search
+4. Relevant documentation chunks are retrieved
+5. The language model generates an answer using only retrieved context
+6. Source references are attached to the response
+
+**The response UI displays:**
+
+- A concise and relevant answer
+- A list of source files used to generate the answer
+- Snippets from each source for verification
+
+**This approach ensures:**
+
+- Answers remain factual and grounded
+- Users can validate information instantly
+- No hallucinated content
+- High trust in documentation accuracy
+
+---
+
+## Architecture
+
+![System Architecture Diagram](assets/images/arch.png)
+
+The system follows a three-layer architecture:
+
+### Client Layer
+
+- Mintlify documentation site
+- Embedded chat widget
+- User interaction handling
+
+### Application Layer
+
+- Flask backend API
+- LangChain RAG pipeline
+- Query processing and orchestration
+
+### Data and AI Layer
+
+- ChromaDB vector store
+- Ollama local inference engine
+- Embedding and generation models
+
+### High-level Flow
+
+1. User submits question from UI
+2. Backend generates query embedding
+3. Vector database retrieves relevant context
+4. LLM generates grounded answer
+5. Sources are attached and returned
+6. UI renders answer and citations
+
+This design enables local deployment, predictable latency, and full data ownership.
+
+---
+
+## Contributing
+
+Contributions are welcome.
+
+### How to Contribute
+
+1. Fork the repository
+2. Create a new feature branch
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+3. Commit your changes
+
+```bash
+git commit -m "Add meaningful description"
+```
+
+4. Push to your fork
+5. Open a pull request
+
+### Contribution Guidelines
+
+- Follow PEP8 for Python code
+- Keep commits small and focused
+- Update documentation when behavior changes
+- Avoid breaking existing flows
+- Test locally before submitting
+
+---
+
+## License
+
+This project is maintained by **Infrasity Labs**. All rights reserved unless otherwise specified.
+
+---
+
+## Maintainer
+
+**Gaurav**  
+GitHub: [codeby-gaurav](https://github.com/codeby-gaurav)
+
+---
+
+## Version
+
+- **Version:** 1.0.0
+- **Last Updated:** January 2026
