@@ -1,8 +1,9 @@
-# AI-Powered Documentation Assistant for Kubiya Docs
+# AI-Powered Documentation Assistant (RAG-Based)
 
-An intelligent documentation assistant built using Retrieval-Augmented Generation (RAG). The system provides fast, accurate, and source-backed answers directly from Kubiya documentation using a fully local AI stack powered by Ollama.
 
-This project demonstrates how modern documentation platforms can embed AI search and conversational assistance without external APIs, ensuring privacy, performance, and full control over infrastructure.
+An AI documentation assistant built with Retrieval-Augmented Generation (RAG). It gives fast, accurate, source-backed answers from your docs using a fully local AI stack powered by Ollama.
+
+For this implementation, we used Kubiya docs as the example documentation set and wired the assistant to answer strictly from that content (not from “general LLM knowledge”). That keeps results consistent, private, and easy to verify.
 
 ---
 
@@ -24,17 +25,19 @@ This project demonstrates how modern documentation platforms can embed AI search
 
 ## About The Project
 
-This project is an AI-powered documentation assistant integrated into the Kubiya documentation site.  
-Users can ask natural language questions and receive accurate responses grounded exclusively in the official documentation.
+This project is an AI-powered documentation assistant embedded into a documentation site.  
+Users can ask natural language questions and get answers grounded exclusively in the docs content.
 
-Instead of relying on pre-trained knowledge, the assistant uses a Retrieval-Augmented Generation pipeline that:
+We’re using Kubiya docs as the working example here, the same approach applies to any Mintlify-style docs repo.
+
+Instead of relying on the model’s pre-trained knowledge, the assistant uses a Retrieval-Augmented Generation pipeline that:
 
 - Indexes documentation files into a vector database
 - Performs semantic search for relevant context
 - Generates answers using a local LLM
 - Returns citations to the original source files
 
-The result is reliable documentation search with explainability and traceability.
+The result is reliable documentation search with clickable sources and traceability.
 
 Primary goals:
 
@@ -205,7 +208,7 @@ This section explains how the Ask AI feature works from a user perspective.
 
 ### Ask AI Interface
 
-![Ask AI Interface](assets/images/img1.png)
+![Ask AI Interface](assets/images/ragr1.gif)
 
 The Ask AI interface appears as a floating button inside the documentation website. When clicked, it opens a slide-in chat panel where users can interact with the documentation assistant.
 
@@ -217,7 +220,7 @@ The Ask AI interface appears as a floating button inside the documentation websi
 - Scrollable conversation history
 - Send button and keyboard submission support
 
-The interface also displays suggested starter questions to help users understand what they can ask.
+The interface also shows a few starter questions so users immediately know what kinds of queries work well.
 
 **Example starter questions shown in the UI:**
 
@@ -237,7 +240,7 @@ You can use the following queries to validate the system:
 - How does Kubiya handle orchestration?
 - What integrations does Kubiya support?
 - What is the purpose of the MCP server?
-- How does Kubiya handle enterprise governance?
+- How does Kubiya handle governance and access control?
 - What APIs are available in Kubiya?
 
 These questions demonstrate search accuracy, retrieval quality, and response grounding.
@@ -246,7 +249,7 @@ These questions demonstrate search accuracy, retrieval quality, and response gro
 
 ### AI Response and Source Attribution
 
-![AI Response with Sources](assets/images/img2.png)
+![AI Response with Sources](assets/images/ragr2.gif)
 
 When a user submits a question:
 
@@ -267,8 +270,8 @@ When a user submits a question:
 
 - Answers remain factual and grounded
 - Users can validate information instantly
-- No hallucinated content
-- High trust in documentation accuracy
+- Reduced hallucinations (answers are constrained to retrieved context)
+- Higher trust in documentation accuracy
 
 ---
 
