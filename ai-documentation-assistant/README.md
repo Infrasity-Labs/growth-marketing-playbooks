@@ -350,12 +350,6 @@ This project is maintained by **Infrasity Labs**. All rights reserved unless oth
 
 ---
 
-## Maintainer
-
-**Gaurav**  
-GitHub: [codeby-gaurav](https://github.com/codeby-gaurav)
-
----
 
 ## Version
 
