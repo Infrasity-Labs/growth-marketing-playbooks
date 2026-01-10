@@ -272,10 +272,5 @@ Contributions are welcome.
 
 This project is maintained by **Infrasity Labs**. All rights reserved unless otherwise specified.
 
----
-
-<div align="center">
-
-**Version 1.0.0** · Last Updated January 2026
-
-</div>
+- **Version:** 1.0.0
+- **Last Updated:** January 2026
