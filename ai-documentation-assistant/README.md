@@ -295,7 +295,7 @@ Then update the backend to use it.
 
 ---
 
-## Common Issues and Fixes
+## Troubleshooting
 
 | Problem | Solution |
 |---------|----------|
@@ -337,8 +337,6 @@ MIT License. Use it, modify it, ship it.
 
 <div align="center">
 
-**Built by [Infrasity Labs](https://infrasity.com)**
-
-*Making developer tools discoverable through great documentation.*
+**Built by [Infrasity](https://infrasity.com)** — We help DevTools teams turn documentation into adoption engines.
 
 </div>
