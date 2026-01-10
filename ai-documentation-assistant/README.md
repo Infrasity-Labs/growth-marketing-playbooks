@@ -13,7 +13,7 @@
 
 ---
 
-## Why This Exists
+## Build an AI Chatbot That Answers Questions From Your Docs
 
 Your documentation is a goldmine—but users don't read it. They search, skim, and leave frustrated.
 
@@ -29,7 +29,7 @@ By the end, you'll have a working RAG (Retrieval-Augmented Generation) system th
 
 ---
 
-## What You'll Build
+## System Architecture: RAG Pipeline Overview
 
 ![System Architecture Diagram](assets/images/arch.png)
 
@@ -50,7 +50,7 @@ No external API calls. No data leaves your machine. Full control.
 
 ---
 
-## Quick Start
+## Installation and Setup
 
 ### Prerequisites
 
@@ -112,7 +112,7 @@ Open `http://localhost:3000` → Click **Ask AI** → Start querying.
 
 ---
 
-## Adapting for Your Docs
+## How to Connect Your Own Documentation
 
 This is the important part. Here's how to make this work with **your** documentation:
 
@@ -192,7 +192,7 @@ If answers seem off, check that your docs actually contain the information—RAG
 
 ---
 
-## How It Works (For the Curious)
+## Understanding RAG: How Retrieval-Augmented Generation Works
 
 ### RAG in 60 Seconds
 
@@ -214,7 +214,7 @@ Traditional LLMs hallucinate because they generate from memory. RAG fixes this:
 
 ---
 
-## Product Walkthrough
+## Demo: Chat Interface and Source Citations
 
 ### The Chat Interface
 
@@ -255,7 +255,7 @@ ai-documentation-assistant/
 
 ---
 
-## Configuration Options
+## Customizing Models, Chunk Sizes, and Embeddings
 
 ### Changing the LLM Model
 
@@ -295,7 +295,7 @@ Then update the backend to use it.
 
 ---
 
-## Troubleshooting
+## Common Issues and Fixes
 
 | Problem | Solution |
 |---------|----------|
