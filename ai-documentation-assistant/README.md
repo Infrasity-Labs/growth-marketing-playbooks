@@ -1,161 +1,112 @@
-# AI-Powered Documentation Assistant (RAG-Based)
+<div align="center">
 
+# AI Documentation Assistant
 
-An AI documentation assistant built with Retrieval-Augmented Generation (RAG). It gives fast, accurate, source-backed answers from your docs using a fully local AI stack powered by Ollama.
+**An RAG-powered documentation assistant that answers questions directly from your docs.**
 
-For this implementation, we used Kubiya docs as the example documentation set and wired the assistant to answer strictly from that content (not from “general LLM knowledge”). That keeps results consistent, private, and easy to verify.
+[![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
+[![License](https://img.shields.io/badge/License-Infrasity%20Labs-green.svg)](#license)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#prerequisites)
+[![Ollama](https://img.shields.io/badge/Powered%20by-Ollama-orange.svg)](https://ollama.ai)
+
+</div>
+
+---
+
+An AI documentation assistant built with Retrieval-Augmented Generation (RAG). It provides fast, accurate, source-backed answers from your documentation using a fully local AI stack powered by Ollama—no external API calls, complete data privacy, and verifiable citations.
+
+This implementation uses Kubiya docs as the example documentation set. The assistant answers strictly from indexed content, not from general LLM knowledge, ensuring consistent, private, and auditable results.
+
+---
+
+## Features
+
+- **Semantic Search** — Natural language queries matched against documentation content using vector embeddings
+- **Source Attribution** — Every answer includes clickable citations to the original source files
+- **Fully Local** — Runs entirely on your machine with Ollama; no external API dependencies
+- **Mintlify Integration** — Embeddable chat widget for any Mintlify-powered documentation site
+- **Grounded Responses** — Answers constrained to retrieved context, reducing hallucinations
+- **Real-time Interaction** — Conversational UI with starter questions and scrollable history
 
 ---
 
 ## Table of Contents
 
-- [About The Project](#about-the-project)
-- [Built With](#built-with)
+- [Features](#features)
+- [Architecture](#architecture)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
+- [Usage](#usage)
 - [Product Walkthrough](#product-walkthrough)
-  - [Ask AI Interface](#ask-ai-interface)
-  - [AI Response and Source Attribution](#ai-response-and-source-attribution)
-- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Tech Stack](#tech-stack)
 - [Contributing](#contributing)
 - [License](#license)
 
 ---
 
-## About The Project
+## Architecture
 
-This project is an AI-powered documentation assistant embedded into a documentation site.  
-Users can ask natural language questions and get answers grounded exclusively in the docs content.
+![System Architecture Diagram](assets/images/arch.png)
 
-We’re using Kubiya docs as the working example here, the same approach applies to any Mintlify-style docs repo.
+The system follows a three-layer architecture:
 
-Instead of relying on the model’s pre-trained knowledge, the assistant uses a Retrieval-Augmented Generation pipeline that:
+| Layer | Components |
+|-------|------------|
+| **Client** | Mintlify documentation site, embedded chat widget, user interaction handling |
+| **Application** | Flask backend API, LangChain RAG pipeline, query processing and orchestration |
+| **Data & AI** | ChromaDB vector store, Ollama local inference engine, embedding and generation models |
 
-- Indexes documentation files into a vector database
-- Performs semantic search for relevant context
-- Generates answers using a local LLM
-- Returns citations to the original source files
+### How It Works
 
-The result is reliable documentation search with clickable sources and traceability.
+1. User submits a question from the UI
+2. Backend generates a query embedding
+3. Vector database retrieves relevant context
+4. LLM generates a grounded answer using only retrieved content
+5. Source references are attached to the response
+6. UI renders the answer with citations
 
-Primary goals:
-
-- Improve developer experience when navigating large documentation
-- Reduce manual search and page hopping
-- Provide instant, contextual answers
-- Maintain full local deployment with zero external API dependency
-
----
-
-## Project Structure
-
-```
-ai-documentation-assistant/
-├── backend/                # Flask API, RAG pipeline, vector DB logic
-├── core-concepts/          # MDX documentation content
-├── introduction/           # Introduction docs
-├── quickstart/             # Getting started docs
-├── assets/
-│   └── images/             # README screenshots and diagrams
-├── .gitignore
-├── chat-widget.js          # Frontend chat widget
-├── docs.json               # Mintlify configuration
-└── README.md               # Project documentation
-```
-
----
-
-## Built With
-
-### Frontend
-
-- Mintlify Documentation Platform
-- Vanilla JavaScript
-- HTML5 and CSS3
-- Fetch API
-
-### Backend
-
-- Python 3.11
-- Flask
-- Flask-CORS
-- LangChain
-- LangChain Community Integrations
-
-### AI and Data
-
-- Ollama (Local LLM runtime)
-- Llama 3.2 (Text generation model)
-- all-MiniLM (Embedding model)
-- ChromaDB (Vector database)
-
-### Tooling
-
-- Git
-- npm
-- pip
-- Virtualenv
+This design enables local deployment, predictable latency, and full data ownership.
 
 ---
 
 ## Getting Started
 
-Follow these instructions to run the project locally.
-
 ### Prerequisites
 
-Ensure the following software is installed:
-
-- Python 3.11 or higher
-- Node.js 18 or higher
-- npm
-- Git
-- Ollama (latest version)
-
-System recommendations:
-
-- Minimum 8 GB RAM
-- At least 5 GB free disk space
-- Windows, macOS, or Linux
-
----
+| Requirement | Version |
+|-------------|---------|
+| Python | 3.11+ |
+| Node.js | 18+ |
+| Ollama | Latest |
+| RAM | 8 GB minimum |
+| Disk Space | 5 GB free |
 
 ### Installation
 
-#### 1. Clone the Repository
+**1. Clone the repository**
 
 ```bash
 git clone https://github.com/Infrasity-Labs/growth-marketing-playbooks.git
 cd growth-marketing-playbooks/ai-documentation-assistant
 ```
 
-#### 2. Install Ollama
+**2. Install Ollama and download models**
 
-Download and install Ollama from the [official website](https://ollama.ai).
-
-Verify installation:
-
-```bash
-ollama --version
-```
-
-#### 3. Download Models
+Download Ollama from [ollama.ai](https://ollama.ai), then pull the required models:
 
 ```bash
 ollama pull llama3.2:1b
 ollama pull all-minilm
-ollama list
 ```
 
-#### 4. Backend Setup
+**3. Set up the backend**
 
 ```bash
 cd backend
-
 python -m venv venv
 
-# Activate virtual environment
 # Windows
 venv\Scripts\activate
 
@@ -165,46 +116,50 @@ source venv/bin/activate
 pip install flask flask-cors langchain langchain-community chromadb
 ```
 
-#### 5. Frontend Setup
+**4. Install Mintlify**
 
 ```bash
 npm install -g mintlify
-mintlify --version
 ```
 
-#### 6. Start Services
+**5. Start all services**
 
-Open three terminals.
-
-**Terminal 1 – Ollama**
+Run each command in a separate terminal:
 
 ```bash
+# Terminal 1 – Ollama
 ollama serve
-```
 
-**Terminal 2 – Backend**
+# Terminal 2 – Backend
+cd backend && python app.py
 
-```bash
-cd backend
-python app.py
-```
-
-**Terminal 3 – Frontend**
-
-```bash
+# Terminal 3 – Frontend
 mintlify dev
 ```
 
-Access the documentation site:
-
-```
-http://localhost:3000
-```
-## Product Walkthrough
-
-This section explains how the Ask AI feature works from a user perspective.
+Open your browser to `http://localhost:3000`
 
 ---
+
+## Usage
+
+Once running, click the **Ask AI** button on the documentation site to open the chat interface.
+
+**Example queries:**
+
+```
+What is Kubiya?
+How do I get started?
+What are Kubiya agents?
+How does Kubiya handle orchestration?
+What integrations does Kubiya support?
+```
+
+The assistant will return a concise answer with source citations you can click to verify.
+
+---
+
+## Product Walkthrough
 
 ### Ask AI Interface
 
@@ -220,30 +175,22 @@ The Ask AI interface appears as a floating button inside the documentation websi
 - Scrollable conversation history
 - Send button and keyboard submission support
 
-The interface also shows a few starter questions so users immediately know what kinds of queries work well.
-
-**Example starter questions shown in the UI:**
+The interface shows starter questions so users immediately know what kinds of queries work well:
 
 - What is Kubiya?
 - How do I get started?
 - Tell me about agents
 
-#### Additional Sample Questions for Testing
+#### Sample Questions for Testing
 
-You can use the following queries to validate the system:
+Use these queries to validate search accuracy, retrieval quality, and response grounding:
 
 - What is Kubiya and what problem does it solve?
 - How does Kubiya manage AI workloads?
-- What are Kubiya agents?
-- How do I get started with Kubiya?
 - What are the core concepts in Kubiya?
-- How does Kubiya handle orchestration?
-- What integrations does Kubiya support?
 - What is the purpose of the MCP server?
 - How does Kubiya handle governance and access control?
 - What APIs are available in Kubiya?
-
-These questions demonstrate search accuracy, retrieval quality, and response grounding.
 
 ---
 
@@ -275,40 +222,31 @@ When a user submits a question:
 
 ---
 
-## Architecture
+## Project Structure
 
-![System Architecture Diagram](assets/images/arch.png)
+```
+ai-documentation-assistant/
+├── backend/                # Flask API, RAG pipeline, vector DB logic
+├── core-concepts/          # MDX documentation content
+├── introduction/           # Introduction docs
+├── quickstart/             # Getting started docs
+├── assets/
+│   └── images/             # README screenshots and diagrams
+├── chat-widget.js          # Frontend chat widget
+├── docs.json               # Mintlify configuration
+└── README.md               # Project documentation
+```
 
-The system follows a three-layer architecture:
+---
 
-### Client Layer
+## Tech Stack
 
-- Mintlify documentation site
-- Embedded chat widget
-- User interaction handling
-
-### Application Layer
-
-- Flask backend API
-- LangChain RAG pipeline
-- Query processing and orchestration
-
-### Data and AI Layer
-
-- ChromaDB vector store
-- Ollama local inference engine
-- Embedding and generation models
-
-### High-level Flow
-
-1. User submits question from UI
-2. Backend generates query embedding
-3. Vector database retrieves relevant context
-4. LLM generates grounded answer
-5. Sources are attached and returned
-6. UI renders answer and citations
-
-This design enables local deployment, predictable latency, and full data ownership.
+| Category | Technologies |
+|----------|--------------|
+| **Frontend** | Mintlify, Vanilla JavaScript, HTML5, CSS3 |
+| **Backend** | Python 3.11, Flask, Flask-CORS, LangChain |
+| **AI & Data** | Ollama, Llama 3.2, all-MiniLM, ChromaDB |
+| **Tooling** | Git, npm, pip, Virtualenv |
 
 ---
 
@@ -316,30 +254,16 @@ This design enables local deployment, predictable latency, and full data ownersh
 
 Contributions are welcome.
 
-### How to Contribute
-
 1. Fork the repository
-2. Create a new feature branch
+2. Create a feature branch: `git checkout -b feature/your-feature-name`
+3. Commit your changes: `git commit -m "Add meaningful description"`
+4. Push to your fork and open a pull request
 
-```bash
-git checkout -b feature/your-feature-name
-```
-
-3. Commit your changes
-
-```bash
-git commit -m "Add meaningful description"
-```
-
-4. Push to your fork
-5. Open a pull request
-
-### Contribution Guidelines
+**Guidelines:**
 
 - Follow PEP8 for Python code
 - Keep commits small and focused
 - Update documentation when behavior changes
-- Avoid breaking existing flows
 - Test locally before submitting
 
 ---
@@ -350,14 +274,8 @@ This project is maintained by **Infrasity Labs**. All rights reserved unless oth
 
 ---
 
-## Maintainer
+<div align="center">
 
-**Gaurav**  
-GitHub: [codeby-gaurav](https://github.com/codeby-gaurav)
+**Version 1.0.0** · Last Updated January 2026
 
----
-
-## Version
-
-- **Version:** 1.0.0
-- **Last Updated:** January 2026
+</div>
