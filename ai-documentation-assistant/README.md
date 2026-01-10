@@ -5,7 +5,6 @@
 **Turn your product docs into an AI-powered knowledge base your users can query.**
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](#license)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#prerequisites)
 [![Ollama](https://img.shields.io/badge/Powered%20by-Ollama-orange.svg)](https://ollama.ai)
 
@@ -328,10 +327,6 @@ Then update the backend to use it.
 Please follow PEP8 for Python and test locally before submitting.
 
 ---
-
-## License
-
-MIT License. Use it, modify it, ship it.
 
 ---
 
