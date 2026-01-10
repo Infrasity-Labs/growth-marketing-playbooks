@@ -5,6 +5,7 @@
 **Turn your product docs into an AI-powered knowledge base your users can query.**
 
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](#license)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey.svg)](#prerequisites)
 [![Ollama](https://img.shields.io/badge/Powered%20by-Ollama-orange.svg)](https://ollama.ai)
 
@@ -294,7 +295,7 @@ Then update the backend to use it.
 
 ---
 
-## Troubleshooting
+## Common Issues and Fixes
 
 | Problem | Solution |
 |---------|----------|
@@ -320,7 +321,7 @@ Then update the backend to use it.
 ## Contributing
 
 1. Fork the repo
-2. Create a branch: `git checkout -b feature/your-feature`
+2. Create a branch: `git checkout -b feature/your-feature.`
 3. Commit changes: `git commit -m "Add feature"`
 4. Push and open a PR
 
@@ -328,10 +329,11 @@ Please follow PEP8 for Python and test locally before submitting.
 
 ---
 
----
 
 <div align="center">
 
-**Built by [Infrasity](https://infrasity.com)** — We help DevTools teams turn documentation into adoption engines.
+**Built by [Infrasity Labs](https://infrasity.com)**
+
+*Making developer tools discoverable through great documentation.*
 
 </div>
