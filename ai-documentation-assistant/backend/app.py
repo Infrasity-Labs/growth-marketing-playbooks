@@ -9,36 +9,64 @@ from langchain_community.llms import Ollama
 from langchain.chains import RetrievalQA
 from langchain.prompts import PromptTemplate
 import os
+import json
+import re
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Configuration from environment variables
+PRODUCT_NAME = os.getenv("PRODUCT_NAME", "Your Product")
+OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
+LLM_MODEL = os.getenv("LLM_MODEL", "llama3.2:1b")
+EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "all-minilm")
+LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.7"))
+FLASK_DEBUG = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+PORT = int(os.getenv("PORT", "5000"))
+HOST = os.getenv("HOST", "0.0.0.0")
+DOCS_PATH = os.getenv("DOCS_PATH", "../")
+CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_db")
+CHUNK_SIZE = int(os.getenv("CHUNK_SIZE", "500"))
+CHUNK_OVERLAP = int(os.getenv("CHUNK_OVERLAP", "50"))
+RETRIEVAL_K = int(os.getenv("RETRIEVAL_K", "2"))
 
 app = Flask(__name__)
 CORS(app)
 
 print("🚀 Initializing AI backend...")
+print(f"   📦 Product: {PRODUCT_NAME}")
+print(f"   🤖 LLM Model: {LLM_MODEL}")
+print(f"   🔍 Embedding Model: {EMBEDDING_MODEL}")
+print(f"   🌐 Ollama URL: {OLLAMA_URL}")
 
-# Initialize Ollama models with smaller model for RAM constraints
+# Initialize Ollama models with configuration from environment
 llm = Ollama(
-    model="llama3.2:1b",  # 800MB model instead of 2GB
-    base_url="http://localhost:11434",
-    temperature=0.7
+    model=LLM_MODEL,
+    base_url=OLLAMA_URL,
+    temperature=LLM_TEMPERATURE
 )
 
 embeddings = OllamaEmbeddings(
-    model="all-minilm",
-    base_url="http://localhost:11434"
+    model=EMBEDDING_MODEL,
+    base_url=OLLAMA_URL
 )
 
 print("✅ Models initialized")
 
+# GLOBAL VARIABLES - Make accessible to all endpoints
 qa_chain = None
-
+vectorstore = None
 
 def setup_rag():
     """
     Sets up RAG pipeline - loads existing ChromaDB if available (FAST!)
     """
+    global vectorstore  # ✅ Make global for suggestions endpoint
+    
     print("\n📚 Step 1: Checking for existing vector database...")
     
-    chroma_db_path = "./chroma_db"
+    chroma_db_path = CHROMA_DB_PATH
     
     # Check if ChromaDB already exists
     if os.path.exists(chroma_db_path) and os.path.isdir(chroma_db_path):
@@ -76,7 +104,7 @@ def setup_rag():
     # Create QA system
     print("\n🤖 Step 2: Setting up QA system...")
     
-    prompt_template = """You are a helpful AI assistant for Kubiya documentation.
+    prompt_template = f"""You are a helpful AI assistant for {PRODUCT_NAME} documentation.
 Use the following documentation context to answer the question accurately and concisely.
 
 Important guidelines:
@@ -86,9 +114,9 @@ Important guidelines:
 - Keep answers concise but complete
 
 Documentation Context:
-{context}
+{{context}}
 
-Question: {question}
+Question: {{question}}
 
 Answer:"""
 
@@ -101,7 +129,7 @@ Answer:"""
         llm=llm,
         chain_type="stuff",
         retriever=vectorstore.as_retriever(
-            search_kwargs={"k": 2}  # Only retrieve 2 most relevant chunks
+            search_kwargs={"k": RETRIEVAL_K}
         ),
         return_source_documents=True,
         chain_type_kwargs={"prompt": PROMPT}
@@ -112,16 +140,17 @@ Answer:"""
     
     return qa
 
-
 def create_vectorstore_from_scratch():
     """
     Helper function to create vector database from documentation files
     Only called on first run or when database needs to be rebuilt
     """
+    global vectorstore  # ✅ Make global
+    
     print("\n   📂 Step A: Loading documentation files...")
     
     # Path to parent directory (where all doc folders are)
-    docs_path = os.path.join(os.path.dirname(__file__), "..")
+    docs_path = os.path.join(os.path.dirname(__file__), DOCS_PATH)
     docs_path = os.path.abspath(docs_path)
     
     print(f"      Loading from: {docs_path}")
@@ -167,8 +196,8 @@ def create_vectorstore_from_scratch():
     print("\n   ✂️  Step B: Splitting documents into chunks...")
     
     text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=50,
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
         length_function=len,
         separators=["\n\n", "\n", " ", ""]
     )
@@ -185,30 +214,28 @@ def create_vectorstore_from_scratch():
         vectorstore = Chroma.from_documents(
             documents=chunks,
             embedding=embeddings,
-            persist_directory="./chroma_db"
+            persist_directory=CHROMA_DB_PATH
         )
-        print("      ✅ Vector database created and saved to ./chroma_db")
+        print(f"      ✅ Vector database created and saved to {CHROMA_DB_PATH}")
         return vectorstore
     except Exception as e:
         print(f"      ❌ Error creating vector database: {str(e)}")
         print("      Make sure Ollama is running: ollama serve")
         return None
 
-
 @app.route('/api/health', methods=['GET'])
 def health():
     """Health check endpoint"""
     return jsonify({
         "status": "ok",
-        "message": "Kubiya AI backend is running!",
+        "message": f"{PRODUCT_NAME} AI backend is running!",
         "models": {
-            "llm": "llama3.2:1b",
-            "embeddings": "all-minilm"
+            "llm": LLM_MODEL,
+            "embeddings": EMBEDDING_MODEL
         },
         "file_type": "mdx",
         "database": "chroma_db"
     })
-
 
 @app.route('/api/ask', methods=['POST'])
 def ask():
@@ -299,10 +326,102 @@ def ask():
             "details": str(e)
         }), 500
 
+# 🔥 NEW ENDPOINT: Dynamic Follow-up Suggestions 
+@app.route('/api/suggestions', methods=['POST'])
+def get_suggestions():
+    """Generate 3 SMART follow-up questions based on recent conversation"""
+    try:
+        data = request.json
+        last_question = data.get('question', '').strip()
+        
+        if not last_question or not vectorstore:
+            return jsonify({"suggestions": []})
+        
+        print(f"\n💡 Generating suggestions for: {last_question[:50]}...")
+        
+        # Get MORE relevant docs (k=6) for better context
+        relevant_docs = vectorstore.similarity_search(last_question, k=6)
+        context = "\n\n".join([doc.page_content for doc in relevant_docs[:4]])
+        
+        # 🔥 IMPROVED PROMPT - Much more specific
+        suggestion_prompt = f"""You are generating 3 follow-up questions for {PRODUCT_NAME} documentation.
+
+USER ASKED: "{last_question}"
+
+RELEVANT DOCS: {context[:3000]}
+
+Generate EXACTLY 3 specific follow-up questions that:
+1. Directly relate to the user's question topic
+2. Use key terms/phrases from the docs above  
+3. Are actionable (How to..., What are..., Can I...)
+4. Max 70 characters each
+5. Sound natural for documentation users
+
+Return ONLY valid JSON array:
+["Question 1?", "Question 2?", "Question 3?"]"""
+
+        suggestions_raw = llm(suggestion_prompt)
+        
+        # Better JSON parsing
+        try:
+            json_match = re.search(r'\[.*\]', suggestions_raw, re.DOTALL | re.IGNORECASE)
+            if json_match:
+                suggestion_list = json.loads(json_match.group(0))
+            else:
+                raise ValueError("No JSON")
+        except:
+            # 🔥 BETTER FALLBACK - Extract key terms from docs
+            key_topics = []
+            for doc in relevant_docs[:3]:
+                # Extract technical terms, file names, commands
+                content = doc.page_content.lower()
+                # Check for common documentation topics
+                if 'agent' in content or 'workflow' in content:
+                    if 'agent' in content:
+                        key_topics.append('agents')
+                    if 'workflow' in content or 'workload' in content:
+                        key_topics.append('workflows')
+                    if 'quickstart' in content or 'get started' in content:
+                        key_topics.append('setup')
+                    if 'installation' in content:
+                        key_topics.append('install')
+            
+            # Smart fallback based on actual docs
+            if key_topics:
+                topic = key_topics[0]
+                suggestion_list = [
+                    f"How do I setup {topic}?",
+                    f"What are {topic} best practices?", 
+                    f"Common {topic} errors?"
+                ]
+            else:
+                suggestion_list = [
+                    "How do I get started with this?",
+                    "What are the next steps?",
+                    "Any common issues?"
+                ]
+        
+        # Clean and validate
+        clean_suggestions = []
+        for sug in suggestion_list[:3]:
+            if isinstance(sug, str) and len(sug.strip()) > 10 and len(sug) < 80 and '?' in sug:
+                clean_suggestions.append(sug.strip())
+        
+        # Ensure exactly 3 good ones
+        while len(clean_suggestions) < 3:
+            clean_suggestions.append("How do I implement this?")
+        
+        print(f"   ✅ Generated: {clean_suggestions}")
+        return jsonify({"suggestions": clean_suggestions})
+        
+    except Exception as e:
+        print(f"   ❌ Suggestions error: {str(e)}")
+        return jsonify({"suggestions": ["How to setup?", "Best practices?", "Common issues?"]})
+
 
 if __name__ == '__main__':
     print("\n" + "="*60)
-    print(" 🤖 Kubiya Documentation AI Backend")
+    print(f" 🤖 {PRODUCT_NAME} Documentation AI Backend")
     print("="*60)
     
     # Setup RAG pipeline
@@ -319,17 +438,18 @@ if __name__ == '__main__':
     
     # Start Flask server
     print("\n🌐 Starting Flask server...")
-    print("   Backend URL: http://localhost:5000")
-    print("   Health check: http://localhost:5000/api/health")
-    print("   Ask endpoint: http://localhost:5000/api/ask")
+    print(f"   Backend URL: http://{HOST}:{PORT}")
+    print(f"   Health check: http://{HOST}:{PORT}/api/health")
+    print(f"   Ask endpoint: http://{HOST}:{PORT}/api/ask")
+    print(f"   🔥 NEW: Suggestions endpoint: http://{HOST}:{PORT}/api/suggestions")
     print("\n   💡 Test with curl:")
-    print('   curl -X POST http://localhost:5000/api/ask -H "Content-Type: application/json" -d "{\\"question\\":\\"What is Kubiya?\\"}"')
+    print(f'   curl -X POST http://{HOST}:{PORT}/api/ask -H "Content-Type: application/json" -d "{{\\"question\\":\\"What is {PRODUCT_NAME}?\\"}}"')
     print("\n   🎯 Frontend chat: http://localhost:3000")
     print("\n   Ready to receive questions!")
     print("   Press Ctrl+C to stop the server\n")
     
     app.run(
-        debug=True,
-        port=5000,
-        host='0.0.0.0'
+        debug=FLASK_DEBUG,
+        port=PORT,
+        host=HOST
     )

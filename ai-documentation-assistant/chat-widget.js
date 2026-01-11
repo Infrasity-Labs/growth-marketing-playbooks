@@ -1,8 +1,30 @@
-// AI Chat Widget for Kubiya Documentation
+// AI Chat Widget for Documentation
 // Auto-loads on every Mintlify page
 
 (function() {
   'use strict';
+  
+  // ============================================================================
+  // USER CONFIGURATION - Edit these values to customize for your product
+  // ============================================================================
+  
+  const USER_CONFIG = {
+  PRODUCT_NAME: 'Documentation',                   // Your product name (change in .env PRODUCT_NAME)
+  API_URL: 'http://localhost:5000/api/ask',        // Backend API endpoint
+  SUGGESTIONS_URL: 'http://localhost:5000/api/suggestions',  
+  LLM_MODEL: 'Llama 3.2',                          // Display name of your LLM
+                          
+    // Example questions shown in the welcome screen
+    EXAMPLE_QUESTIONS: [
+      'What can you help me with?',
+      'How do I get started?',
+      'Tell me about the key concepts'
+    ],
+    
+    // Welcome message configuration
+    WELCOME_TITLE: 'Hi! I\'m your AI assistant',
+    WELCOME_MESSAGE: 'Ask me anything about the documentation'
+  };
   
   // Wait for DOM to be ready
   if (document.readyState === 'loading') {
@@ -13,15 +35,16 @@
   
   function initChatWidget() {
     // Prevent multiple initializations
-    if (document.getElementById('kubiya-chat-widget')) {
+    if (document.getElementById('docs-chat-widget')) {
       return;
     }
     
-    console.log('🤖 Initializing Kubiya AI Chat Widget...');
+    console.log(` Initializing ${USER_CONFIG.PRODUCT_NAME} AI Chat Widget...`);
     
-    // Configuration
-    const CONFIG = {
-      API_URL: 'http://localhost:5000/api/ask',
+    // Theme Configuration (keep existing or customize)
+    const THEME_CONFIG = {
+      API_URL: USER_CONFIG.API_URL,
+      SUGGESTIONS_URL: USER_CONFIG.SUGGESTIONS_URL,
       THEME_COLOR: '#8b5cf6',
       THEME_HOVER: '#7c3aed',
       GRADIENT: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
@@ -36,10 +59,10 @@
     
     // Inject CSS
     const style = document.createElement('style');
-    style.id = 'kubiya-chat-styles';
+    style.id = 'docs-chat-styles';
     style.textContent = `
-      /* Kubiya AI Chat Widget Styles */
-      #kubiya-chat-button {
+      /* AI Chat Widget Styles */
+      #docs-chat-button {
         position: fixed;
         bottom: 24px;
         right: 24px;
@@ -60,22 +83,22 @@
         letter-spacing: -0.01em;
       }
       
-      #kubiya-chat-button:hover {
+      #docs-chat-button:hover {
         background: #6d28d9;
         opacity: 0.9;
       }
       
-      #kubiya-chat-button:active {
+      #docs-chat-button:active {
         transform: scale(0.98);
       }
       
-      #kubiya-chat-panel {
+      #docs-chat-panel {
         position: fixed;
         top: 0;
         right: 0;
         width: 450px;
         height: 100vh;
-        background: ${CONFIG.DARK_BG};
+        background: ${THEME_CONFIG.DARK_BG};
         box-shadow: -4px 0 32px rgba(0, 0, 0, 0.5);
         z-index: 999999;
         transform: translateX(100%);
@@ -83,28 +106,28 @@
         display: flex;
         flex-direction: column;
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        border-left: 1px solid ${CONFIG.BORDER_DARK};
+        border-left: 1px solid ${THEME_CONFIG.BORDER_DARK};
       }
       
-      #kubiya-chat-panel.open {
+      #docs-chat-panel.open {
         transform: translateX(0);
       }
       
-      .kubiya-chat-header {
-        background: ${CONFIG.DARK_PANEL};
+      .docs-chat-header {
+        background: ${THEME_CONFIG.DARK_PANEL};
         color: white;
         padding: 20px 24px;
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        border-bottom: 1px solid ${CONFIG.BORDER_DARK};
+        border-bottom: 1px solid ${THEME_CONFIG.BORDER_DARK};
       }
       
-      .kubiya-header-content {
+      .docs-header-content {
         flex: 1;
       }
       
-      .kubiya-header-content h3 {
+      .docs-header-content h3 {
         margin: 0;
         font-size: 17px;
         font-weight: 600;
@@ -115,10 +138,10 @@
         color: #f8fafc;
       }
       
-      .kubiya-header-icon {
+      .docs-header-icon {
         width: 24px;
         height: 24px;
-        background: ${CONFIG.GRADIENT};
+        background: ${THEME_CONFIG.GRADIENT};
         border-radius: 6px;
         display: flex;
         align-items: center;
@@ -127,18 +150,18 @@
         flex-shrink: 0;
       }
       
-      .kubiya-header-content p {
+      .docs-header-content p {
         margin: 4px 0 0 0;
         font-size: 12px;
         opacity: 0.6;
-        color: ${CONFIG.TEXT_SECONDARY};
+        color: ${THEME_CONFIG.TEXT_SECONDARY};
         font-weight: 400;
       }
       
-      .kubiya-close-btn {
+      .docs-close-btn {
         background: transparent;
         border: none;
-        color: ${CONFIG.TEXT_SECONDARY};
+        color: ${THEME_CONFIG.TEXT_SECONDARY};
         font-size: 20px;
         width: 32px;
         height: 32px;
@@ -152,63 +175,63 @@
         flex-shrink: 0;
       }
       
-      .kubiya-close-btn:hover {
+      .docs-close-btn:hover {
         background: rgba(148, 163, 184, 0.1);
-        color: ${CONFIG.TEXT_PRIMARY};
+        color: ${THEME_CONFIG.TEXT_PRIMARY};
       }
       
-      .kubiya-chat-messages {
+      .docs-chat-messages {
         flex: 1;
         overflow-y: auto;
         padding: 24px;
-        background: ${CONFIG.DARK_BG};
+        background: ${THEME_CONFIG.DARK_BG};
       }
       
-      .kubiya-welcome {
+      .docs-welcome {
         padding: 48px 24px 32px;
       }
       
-      .kubiya-welcome h4 {
+      .docs-welcome h4 {
         font-size: 18px;
-        color: ${CONFIG.TEXT_PRIMARY};
+        color: ${THEME_CONFIG.TEXT_PRIMARY};
         margin: 0 0 8px 0;
         font-weight: 600;
         letter-spacing: -0.02em;
       }
       
-      .kubiya-welcome p {
-        color: ${CONFIG.TEXT_SECONDARY};
+      .docs-welcome p {
+        color: ${THEME_CONFIG.TEXT_SECONDARY};
         margin: 0 0 24px 0;
         line-height: 1.5;
         font-size: 14px;
       }
       
-      .kubiya-example-questions {
+      .docs-example-questions {
         display: flex;
         flex-direction: column;
         gap: 8px;
       }
       
-      .kubiya-example-btn {
-        background: ${CONFIG.DARK_CARD};
-        border: 1px solid ${CONFIG.BORDER_DARK};
+      .docs-example-btn {
+        background: ${THEME_CONFIG.DARK_CARD};
+        border: 1px solid ${THEME_CONFIG.BORDER_DARK};
         padding: 12px 16px;
         border-radius: 8px;
         cursor: pointer;
         font-size: 13px;
-        color: ${CONFIG.TEXT_PRIMARY};
+        color: ${THEME_CONFIG.TEXT_PRIMARY};
         transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
         text-align: left;
         font-weight: 500;
       }
       
-      .kubiya-example-btn:hover {
-        background: ${CONFIG.DARK_INPUT};
-        border-color: ${CONFIG.THEME_COLOR};
+      .docs-example-btn:hover {
+        background: ${THEME_CONFIG.DARK_INPUT};
+        border-color: ${THEME_CONFIG.THEME_COLOR};
         color: white;
       }
       
-      .kubiya-message {
+      .docs-message {
         display: flex;
         gap: 12px;
         margin-bottom: 20px;
@@ -226,11 +249,11 @@
         }
       }
       
-      .kubiya-message.user {
+      .docs-message.user {
         flex-direction: row-reverse;
       }
       
-      .kubiya-message-avatar {
+      .docs-message-avatar {
         width: 32px;
         height: 32px;
         border-radius: 6px;
@@ -242,18 +265,18 @@
         font-weight: 600;
       }
       
-      .kubiya-message.user .kubiya-message-avatar {
-        background: ${CONFIG.GRADIENT};
+      .docs-message.user .docs-message-avatar {
+        background: ${THEME_CONFIG.GRADIENT};
         color: white;
       }
       
-      .kubiya-message.ai .kubiya-message-avatar {
-        background: ${CONFIG.DARK_CARD};
-        color: ${CONFIG.THEME_COLOR};
-        border: 1px solid ${CONFIG.BORDER_DARK};
+      .docs-message.ai .docs-message-avatar {
+        background: ${THEME_CONFIG.DARK_CARD};
+        color: ${THEME_CONFIG.THEME_COLOR};
+        border: 1px solid ${THEME_CONFIG.BORDER_DARK};
       }
       
-      .kubiya-message-bubble {
+      .docs-message-bubble {
         max-width: 75%;
         padding: 10px 14px;
         border-radius: 10px;
@@ -262,29 +285,29 @@
         font-size: 14px;
       }
       
-      .kubiya-message.user .kubiya-message-bubble {
-        background: ${CONFIG.GRADIENT};
+      .docs-message.user .docs-message-bubble {
+        background: ${THEME_CONFIG.GRADIENT};
         color: white;
         border-bottom-right-radius: 3px;
       }
       
-      .kubiya-message.ai .kubiya-message-bubble {
-        background: ${CONFIG.DARK_CARD};
-        border: 1px solid ${CONFIG.BORDER_DARK};
-        color: ${CONFIG.TEXT_PRIMARY};
+      .docs-message.ai .docs-message-bubble {
+        background: ${THEME_CONFIG.DARK_CARD};
+        border: 1px solid ${THEME_CONFIG.BORDER_DARK};
+        color: ${THEME_CONFIG.TEXT_PRIMARY};
         border-bottom-left-radius: 3px;
       }
       
-      .kubiya-message-sources {
+      .docs-message-sources {
         margin-top: 12px;
         padding-top: 12px;
         border-top: 1px solid rgba(71, 85, 105, 0.5);
         font-size: 11px;
       }
       
-      .kubiya-sources-title {
+      .docs-sources-title {
         font-weight: 600;
-        color: ${CONFIG.TEXT_SECONDARY};
+        color: ${THEME_CONFIG.TEXT_SECONDARY};
         margin-bottom: 8px;
         display: flex;
         align-items: center;
@@ -294,30 +317,30 @@
         letter-spacing: 0.05em;
       }
       
-      .kubiya-source-item {
+      .docs-source-item {
         background: rgba(42, 49, 66, 0.5);
         padding: 8px 10px;
         border-radius: 6px;
         margin-bottom: 6px;
-        border-left: 2px solid ${CONFIG.THEME_COLOR};
+        border-left: 2px solid ${THEME_CONFIG.THEME_COLOR};
       }
       
-      .kubiya-source-item strong {
-        color: ${CONFIG.THEME_COLOR};
+      .docs-source-item strong {
+        color: ${THEME_CONFIG.THEME_COLOR};
         display: block;
         font-size: 10px;
         margin-bottom: 3px;
         font-weight: 600;
       }
       
-      .kubiya-source-item p {
-        color: ${CONFIG.TEXT_SECONDARY};
+      .docs-source-item p {
+        color: ${THEME_CONFIG.TEXT_SECONDARY};
         font-size: 10px;
         margin: 0;
         line-height: 1.4;
       }
       
-      .kubiya-typing {
+      .docs-typing {
         display: flex;
         align-items: center;
         gap: 12px;
@@ -325,64 +348,64 @@
         font-size: 14px;
       }
       
-      .kubiya-typing-dots {
+      .docs-typing-dots {
         display: flex;
         gap: 4px;
       }
       
-      .kubiya-typing-dots span {
+      .docs-typing-dots span {
         width: 8px;
         height: 8px;
-        background: ${CONFIG.THEME_COLOR};
+        background: ${THEME_CONFIG.THEME_COLOR};
         border-radius: 50%;
         animation: bounce 1.4s infinite ease-in-out;
       }
       
-      .kubiya-typing-dots span:nth-child(1) { animation-delay: -0.32s; }
-      .kubiya-typing-dots span:nth-child(2) { animation-delay: -0.16s; }
+      .docs-typing-dots span:nth-child(1) { animation-delay: -0.32s; }
+      .docs-typing-dots span:nth-child(2) { animation-delay: -0.16s; }
       
       @keyframes bounce {
         0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
         40% { transform: scale(1); opacity: 1; }
       }
       
-      .kubiya-chat-input-container {
+      .docs-chat-input-container {
         padding: 20px 24px;
-        background: ${CONFIG.DARK_PANEL};
-        border-top: 1px solid ${CONFIG.BORDER_DARK};
+        background: ${THEME_CONFIG.DARK_PANEL};
+        border-top: 1px solid ${THEME_CONFIG.BORDER_DARK};
       }
       
-      .kubiya-chat-input-wrapper {
+      .docs-chat-input-wrapper {
         display: flex;
         gap: 10px;
         align-items: center;
       }
       
-      .kubiya-chat-input {
+      .docs-chat-input {
         flex: 1;
         padding: 11px 16px;
-        border: 1px solid ${CONFIG.BORDER_DARK};
+        border: 1px solid ${THEME_CONFIG.BORDER_DARK};
         border-radius: 8px;
         font-size: 14px;
         outline: none;
         transition: all 0.15s;
         font-family: inherit;
-        background: ${CONFIG.DARK_CARD};
-        color: ${CONFIG.TEXT_PRIMARY};
+        background: ${THEME_CONFIG.DARK_CARD};
+        color: ${THEME_CONFIG.TEXT_PRIMARY};
       }
       
-      .kubiya-chat-input:focus {
-        border-color: ${CONFIG.THEME_COLOR};
+      .docs-chat-input:focus {
+        border-color: ${THEME_CONFIG.THEME_COLOR};
         box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
       }
       
-      .kubiya-chat-input::placeholder {
-        color: ${CONFIG.TEXT_SECONDARY};
+      .docs-chat-input::placeholder {
+        color: ${THEME_CONFIG.TEXT_SECONDARY};
         opacity: 0.6;
       }
       
-      .kubiya-send-btn {
-        background: ${CONFIG.GRADIENT};
+      .docs-send-btn {
+        background: ${THEME_CONFIG.GRADIENT};
         color: white;
         border: none;
         width: 40px;
@@ -397,20 +420,20 @@
         flex-shrink: 0;
       }
       
-      .kubiya-send-btn:hover:not(:disabled) {
+      .docs-send-btn:hover:not(:disabled) {
         background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
       }
       
-      .kubiya-send-btn:active:not(:disabled) {
+      .docs-send-btn:active:not(:disabled) {
         transform: scale(0.95);
       }
       
-      .kubiya-send-btn:disabled {
+      .docs-send-btn:disabled {
         opacity: 0.4;
         cursor: not-allowed;
       }
       
-      .kubiya-error-message {
+      .docs-error-message {
         background: rgba(239, 68, 68, 0.1);
         color: #fca5a5;
         padding: 12px 16px;
@@ -424,7 +447,7 @@
         border-left: 3px solid #ef4444;
       }
       
-      .kubiya-error-close {
+      .docs-error-close {
         background: none;
         border: none;
         color: #fca5a5;
@@ -437,17 +460,17 @@
         transition: opacity 0.2s;
       }
       
-      .kubiya-error-close:hover {
+      .docs-error-close:hover {
         opacity: 1;
       }
       
       /* Mobile responsive */
       @media (max-width: 768px) {
-        #kubiya-chat-panel {
+        #docs-chat-panel {
           width: 100%;
         }
         
-        #kubiya-chat-button {
+        #docs-chat-button {
           bottom: 20px;
           right: 20px;
           padding: 14px 24px;
@@ -456,80 +479,137 @@
       }
       
       /* Scrollbar styling for dark theme */
-      .kubiya-chat-messages::-webkit-scrollbar {
+      .docs-chat-messages::-webkit-scrollbar {
         width: 8px;
       }
       
-      .kubiya-chat-messages::-webkit-scrollbar-track {
-        background: ${CONFIG.DARK_BG};
+      .docs-chat-messages::-webkit-scrollbar-track {
+        background: ${THEME_CONFIG.DARK_BG};
       }
       
-      .kubiya-chat-messages::-webkit-scrollbar-thumb {
-        background: ${CONFIG.BORDER_DARK};
+      .docs-chat-messages::-webkit-scrollbar-thumb {
+        background: ${THEME_CONFIG.BORDER_DARK};
         border-radius: 4px;
       }
       
-      .kubiya-chat-messages::-webkit-scrollbar-thumb:hover {
+      .docs-chat-messages::-webkit-scrollbar-thumb:hover {
         background: #64748b;
       }
+              /* FOLLOW-UP SUGGESTIONS */
+      .docs-suggestions {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid rgba(71, 85, 105, 0.3);
+      }
+      .docs-suggestions-title {
+        font-size: 12px;
+        color: ${THEME_CONFIG.TEXT_SECONDARY};
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .docs-suggestion-btn {
+        background: ${THEME_CONFIG.DARK_CARD};
+        border: 1px solid ${THEME_CONFIG.BORDER_DARK};
+        padding: 12px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        color: ${THEME_CONFIG.TEXT_PRIMARY};
+        transition: all 0.2s;
+        text-align: left;
+        margin-bottom: 8px;
+        width: 100%;
+      }
+      .docs-suggestion-btn:hover {
+        background: ${THEME_CONFIG.GRADIENT};
+        border-color: ${THEME_CONFIG.THEME_COLOR};
+        color: white;
+        transform: translateX(4px);
+      }
+              /* Follow-ups Loading Animation */
+      .docs-followups-loading {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 0;
+        font-size: 13px;
+        color: ${THEME_CONFIG.TEXT_SECONDARY};
+      }
+      .docs-followups-dots {
+        display: flex;
+        gap: 3px;
+      }
+      .docs-followups-dots span {
+        width: 6px;
+        height: 6px;
+        background: ${THEME_CONFIG.THEME_COLOR};
+        border-radius: 50%;
+        animation: followupsBounce 1.2s infinite ease-in-out;
+      }
+      .docs-followups-dots span:nth-child(1) { animation-delay: -0.4s; }
+      .docs-followups-dots span:nth-child(2) { animation-delay: -0.2s; }
+      @keyframes followupsBounce {
+        0%, 80%, 100% { transform: scale(0); opacity: 0.4; }
+        40% { transform: scale(1); opacity: 1; }
+      }
+
     `;
     document.head.appendChild(style);
     
     // Create chat widget HTML
     const chatWidget = document.createElement('div');
-    chatWidget.id = 'kubiya-chat-widget';
+    chatWidget.id = 'docs-chat-widget';
     chatWidget.innerHTML = `
-      <button id="kubiya-chat-button">
+      <button id="docs-chat-button">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
         <span>Ask AI</span>
       </button>
       
-      <div id="kubiya-chat-panel">
-        <div class="kubiya-chat-header">
-          <div class="kubiya-header-content">
+      <div id="docs-chat-panel">
+        <div class="docs-chat-header">
+          <div class="docs-header-content">
             <h3>
-              <div class="kubiya-header-icon">
+              <div class="docs-header-icon">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                 </svg>
               </div>
-              Kubiya Docs AI
+              ${USER_CONFIG.PRODUCT_NAME} Docs AI
             </h3>
-            <p>Powered by Llama 3.2</p>
+            <p>Powered by ${USER_CONFIG.LLM_MODEL}</p>
           </div>
-          <button class="kubiya-close-btn" id="kubiya-close-chat">×</button>
+          <button class="docs-close-btn" id="docs-close-chat">×</button>
         </div>
         
-        <div class="kubiya-chat-messages" id="kubiya-messages">
-          <div class="kubiya-welcome">
-            <h4>Hi! I'm your AI assistant</h4>
-            <p>Ask me anything about Kubiya documentation</p>
-            <div class="kubiya-example-questions">
-              <button class="kubiya-example-btn" data-question="What is Kubiya?">
-                What is Kubiya?
-              </button>
-              <button class="kubiya-example-btn" data-question="How do I get started?">
-                How do I get started?
-              </button>
-              <button class="kubiya-example-btn" data-question="Tell me about agents">
-                Tell me about agents
-              </button>
+        <div class="docs-chat-messages" id="docs-messages">
+          <div class="docs-welcome">
+            <h4>${USER_CONFIG.WELCOME_TITLE}</h4>
+            <p>${USER_CONFIG.WELCOME_MESSAGE}</p>
+            <div class="docs-example-questions">
+              ${USER_CONFIG.EXAMPLE_QUESTIONS.map(q => 
+                `<button class="docs-example-btn" data-question="${q}">${q}</button>`
+              ).join('')}
             </div>
           </div>
         </div>
         
-        <div class="kubiya-chat-input-container">
-          <div class="kubiya-chat-input-wrapper">
+        <div class="docs-chat-input-container">
+          <div class="docs-chat-input-wrapper">
             <input 
               type="text" 
-              class="kubiya-chat-input" 
-              id="kubiya-input" 
+              class="docs-chat-input" 
+              id="docs-input" 
               placeholder="Ask anything about the docs..."
               autocomplete="off"
             />
-            <button class="kubiya-send-btn" id="kubiya-send">➤</button>
+            <button class="docs-send-btn" id="docs-send">➤</button>
           </div>
         </div>
       </div>
@@ -542,12 +622,12 @@
     let isLoading = false;
     
     // Elements
-    const chatButton = document.getElementById('kubiya-chat-button');
-    const chatPanel = document.getElementById('kubiya-chat-panel');
-    const closeBtn = document.getElementById('kubiya-close-chat');
-    const messagesContainer = document.getElementById('kubiya-messages');
-    const input = document.getElementById('kubiya-input');
-    const sendBtn = document.getElementById('kubiya-send');
+    const chatButton = document.getElementById('docs-chat-button');
+    const chatPanel = document.getElementById('docs-chat-panel');
+    const closeBtn = document.getElementById('docs-close-chat');
+    const messagesContainer = document.getElementById('docs-messages');
+    const input = document.getElementById('docs-input');
+    const sendBtn = document.getElementById('docs-send');
     
     // Event listeners
     chatButton.addEventListener('click', openChat);
@@ -560,7 +640,7 @@
     });
     
     // Example question buttons
-    document.querySelectorAll('.kubiya-example-btn').forEach(btn => {
+    document.querySelectorAll('.docs-example-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const question = btn.getAttribute('data-question');
         input.value = question;
@@ -582,62 +662,72 @@
     }
     
     async function sendMessage() {
-      const question = input.value.trim();
-      if (!question || isLoading) return;
-      
-      // Clear welcome message
-      const welcome = document.querySelector('.kubiya-welcome');
-      if (welcome) welcome.remove();
-      
-      // Add user message
-      addMessage('user', question);
-      input.value = '';
-      
-      // Show loading
-      isLoading = true;
-      sendBtn.disabled = true;
-      const loadingId = addLoadingMessage();
-      
-      try {
-        const response = await fetch(CONFIG.API_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ question })
-        });
-        
-        if (!response.ok) {
-          throw new Error(`Server returned ${response.status}`);
-        }
-        
-        const data = await response.json();
-        
-        // Remove loading
-        removeMessage(loadingId);
-        
-        // Add AI response
-        addMessage('ai', data.answer, data.sources);
-        
-      } catch (error) {
-        console.error('Chat error:', error);
-        removeMessage(loadingId);
-        addErrorMessage('Could not connect to AI backend. Make sure it\'s running on port 5000.');
-      } finally {
-        isLoading = false;
-        sendBtn.disabled = false;
-      }
+  const question = input.value.trim();
+  if (!question || isLoading) return;
+  
+  // Clear welcome message
+  const welcome = document.querySelector('.docs-welcome');
+  if (welcome) welcome.remove();
+  
+  // Add user message
+  addMessage('user', question);
+  input.value = '';
+  
+  // Show loading
+  isLoading = true;
+  sendBtn.disabled = true;
+  const loadingId = addLoadingMessage();
+  
+  try {
+    const response = await fetch(THEME_CONFIG.API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question })
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
     }
+    
+    const data = await response.json();
+    
+    // Remove loading
+    removeMessage(loadingId);
+    
+    // Add AI response WITH FOLLOW-UP SUGGESTIONS 🔥
+    addMessage('ai', data.answer, data.sources);
+    //  Show "Generating follow-ups..." animation
+const followupsId = addFollowupsLoading();
+
+await loadSuggestions(question); 
+
+// Remove loading when done
+removeMessage(followupsId);
+     
+     
+    
+  } catch (error) {
+    console.error('Chat error:', error);
+    removeMessage(loadingId);
+    addErrorMessage('Could not connect to AI backend. Make sure it\'s running on port 5000.');
+  } finally {
+    isLoading = false;
+    sendBtn.disabled = false;
+  }
+}
+
     
     function addMessage(role, content, sources = null) {
       const messageDiv = document.createElement('div');
-      messageDiv.className = `kubiya-message ${role}`;
+      messageDiv.className = `docs-message ${role}`;
       
       let sourcesHtml = '';
       if (sources && sources.length > 0) {
         sourcesHtml = `
-          <div class="kubiya-message-sources">
-            <div class="kubiya-sources-title">Sources</div>
+          <div class="docs-message-sources">
+            <div class="docs-sources-title">Sources</div>
             ${sources.map(s => `
-              <div class="kubiya-source-item">
+              <div class="docs-source-item">
                 <strong>${escapeHtml(s.file)}</strong>
                 <p>${escapeHtml(s.preview)}</p>
               </div>
@@ -651,8 +741,8 @@
         : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>`;
       
       messageDiv.innerHTML = `
-        <div class="kubiya-message-avatar">${avatarContent}</div>
-        <div class="kubiya-message-bubble">
+        <div class="docs-message-avatar">${avatarContent}</div>
+        <div class="docs-message-bubble">
           ${escapeHtml(content)}
           ${sourcesHtml}
         </div>
@@ -666,16 +756,16 @@
       const loadingDiv = document.createElement('div');
       const loadingId = 'loading-' + Date.now();
       loadingDiv.id = loadingId;
-      loadingDiv.className = 'kubiya-message ai';
+      loadingDiv.className = 'docs-message ai';
       loadingDiv.innerHTML = `
-        <div class="kubiya-message-avatar">
+        <div class="docs-message-avatar">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
           </svg>
         </div>
-        <div class="kubiya-message-bubble">
-          <div class="kubiya-typing">
-            <div class="kubiya-typing-dots">
+        <div class="docs-message-bubble">
+          <div class="docs-typing">
+            <div class="docs-typing-dots">
               <span></span>
               <span></span>
               <span></span>
@@ -696,13 +786,13 @@
     
     function addErrorMessage(message) {
       const errorDiv = document.createElement('div');
-      errorDiv.className = 'kubiya-error-message';
+      errorDiv.className = 'docs-error-message';
       errorDiv.innerHTML = `
         <span><strong>Error:</strong> ${escapeHtml(message)}</span>
-        <button class="kubiya-error-close">×</button>
+        <button class="docs-error-close">×</button>
       `;
       messagesContainer.appendChild(errorDiv);
-      errorDiv.querySelector('.kubiya-error-close').addEventListener('click', () => errorDiv.remove());
+      errorDiv.querySelector('.docs-error-close').addEventListener('click', () => errorDiv.remove());
       scrollToBottom();
     }
     
@@ -715,7 +805,91 @@
       div.textContent = text;
       return div.innerHTML;
     }
+
+// NEW: Follow-ups loading animation
+function addFollowupsLoading() {
+  const loadingDiv = document.createElement('div');
+  const loadingId = 'followups-' + Date.now();
+  loadingDiv.id = loadingId;
+  loadingDiv.className = 'docs-followups-loading';
+  loadingDiv.innerHTML = `
+    <div class="docs-followups-dots">
+      <span></span><span></span><span></span>
+    </div>
+    <span>Generating follow-ups...</span>
+  `;
+  
+  // Insert after LAST AI message bubble
+  const lastAiBubble = messagesContainer.querySelector('.docs-message.ai:last-of-type .docs-message-bubble');
+  if (lastAiBubble) {
+    lastAiBubble.appendChild(loadingDiv);
+    scrollToBottom();
+  }
+  
+  return loadingId;
+}
+
     
-    console.log('✅ Kubiya AI Chat Widget loaded successfully!');
+    // NEW: Load dynamic follow-up suggestions
+async function loadSuggestions(lastQuestion) {
+  try {
+    const response = await fetch(THEME_CONFIG.SUGGESTIONS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: lastQuestion })
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      showSuggestions(data.suggestions);
+    }
+  } catch (error) {
+    console.log('Suggestions unavailable:', error);
+  }
+}
+
+//  NEW: Show suggestions UI
+function showSuggestions(suggestions) {
+  // Remove existing suggestions
+  const existing = document.querySelector('.docs-suggestions');
+  if (existing) existing.remove();
+  
+  if (!suggestions || suggestions.length === 0) return;
+  
+  const suggestionsDiv = document.createElement('div');
+  suggestionsDiv.className = 'docs-suggestions';
+  suggestionsDiv.innerHTML = `
+    <div class="docs-suggestions-title">
+      ✨ Follow-up suggestions:
+    </div>
+    ${suggestions.slice(0, 3).map(suggestion => 
+      `<button class="docs-suggestion-btn" data-question="${escapeHtml(suggestion)}">${suggestion}</button>`
+    ).join('')}
+  `;
+  
+  // Add click handlers
+  suggestionsDiv.querySelectorAll('.docs-suggestion-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const question = btn.getAttribute('data-question');
+      input.value = question;
+      // Remove suggestions when clicking
+      suggestionsDiv.remove();
+      sendMessage();
+    });
+  });
+  
+  // Insert after LAST AI message
+  const lastAiMessage = messagesContainer.querySelector('.docs-message.ai:last-of-type .docs-message-bubble');
+  if (lastAiMessage) {
+    lastAiMessage.appendChild(suggestionsDiv);
+  }
+  
+  scrollToBottom();
+}
+
+
+    
+    console.log('✅ AI Chat Widget loaded successfully!');
   }
 })();
+
