@@ -325,11 +325,86 @@ def ask():
             "error": "Failed to process request",
             "details": str(e)
         }), 500
+# NEW: Generate smart initial sample questions from docs
+@app.route('/api/sample-questions', methods=['GET'])
+def get_sample_questions():
+    """Generate 3 smart sample questions based on actual documentation"""
+    try:
+        if not vectorstore:
+            return jsonify({"questions": [
+                "What can you help me with?",
+                "How do I get started?",
+                "Tell me about the key concepts"
+            ]})
+        
+        print("\n📝 Generating sample questions from docs...")
+        
+        # Get random diverse chunks from docs
+        all_docs = vectorstore.similarity_search("overview documentation introduction", k=10)
+        
+        # Extract actual topics from docs
+        topics = set()
+        for doc in all_docs[:6]:
+            content = doc.page_content.lower()
+            
+            # Extract specific terms (customize for your docs)
+            if 'agent' in content:
+                topics.add('agents')
+            if 'workflow' in content:
+                topics.add('workflows')
+            if 'integration' in content or 'integrate' in content:
+                topics.add('integrations')
+            if 'api' in content:
+                topics.add('API')
+            if 'quickstart' in content or 'getting started' in content:
+                topics.add('getting started')
+            if 'authentication' in content or 'auth' in content:
+                topics.add('authentication')
+            if 'deployment' in content or 'deploy' in content:
+                topics.add('deployment')
+            if 'configuration' in content or 'config' in content:
+                topics.add('configuration')
+        
+        # Convert to list and pick top 3
+        topic_list = list(topics)[:3]
+        
+        # Generate smart questions
+        if len(topic_list) >= 3:
+            questions = [
+                f"What is {PRODUCT_NAME}?",
+                f"How do I get started with {topic_list[0]}?",
+                f"Tell me about {topic_list[1]}"
+            ]
+        elif len(topic_list) == 2:
+            questions = [
+                f"What is {PRODUCT_NAME}?",
+                f"How do I work with {topic_list[0]}?",
+                f"What are {topic_list[1]}?"
+            ]
+        else:
+            # Fallback with product name
+            questions = [
+                f"What is {PRODUCT_NAME}?",
+                "How do I get started?",
+                "What are the key concepts?"
+            ]
+        
+        print(f"   ✅ Generated: {questions}")
+        return jsonify({"questions": questions})
+        
+    except Exception as e:
+        print(f"   ❌ Sample questions error: {str(e)}")
+        return jsonify({"questions": [
+            f"What is {PRODUCT_NAME}?",
+            "How do I get started?",
+            "Tell me about the main features"
+        ]})
 
-# 🔥 NEW ENDPOINT: Dynamic Follow-up Suggestions 
+
+# NEW ENDPOINT: Dynamic Follow-up Suggestions 
 @app.route('/api/suggestions', methods=['POST'])
 def get_suggestions():
-    """Generate 3 SMART follow-up questions based on recent conversation"""
+    """Generate 3 ULTRA-SPECIFIC follow-up questions"""
     try:
         data = request.json
         last_question = data.get('question', '').strip()
@@ -339,85 +414,111 @@ def get_suggestions():
         
         print(f"\n💡 Generating suggestions for: {last_question[:50]}...")
         
-        # Get MORE relevant docs (k=6) for better context
-        relevant_docs = vectorstore.similarity_search(last_question, k=6)
-        context = "\n\n".join([doc.page_content for doc in relevant_docs[:4]])
+        # Get MORE docs for better context
+        relevant_docs = vectorstore.similarity_search(last_question, k=8)
         
-        # 🔥 IMPROVED PROMPT - Much more specific
-        suggestion_prompt = f"""You are generating 3 follow-up questions for {PRODUCT_NAME} documentation.
-
-USER ASKED: "{last_question}"
-
-RELEVANT DOCS: {context[:3000]}
-
-Generate EXACTLY 3 specific follow-up questions that:
-1. Directly relate to the user's question topic
-2. Use key terms/phrases from the docs above  
-3. Are actionable (How to..., What are..., Can I...)
-4. Max 70 characters each
-5. Sound natural for documentation users
-
-Return ONLY valid JSON array:
-["Question 1?", "Question 2?", "Question 3?"]"""
-
-        suggestions_raw = llm(suggestion_prompt)
+        # Build rich context with metadata
+        context_parts = []
+        for i, doc in enumerate(relevant_docs[:5]):
+            source_file = os.path.basename(doc.metadata.get('source', ''))
+            context_parts.append(f"[Doc {i+1} - {source_file}]:\n{doc.page_content[:400]}")
         
-        # Better JSON parsing
+        context = "\n\n".join(context_parts)
+        
+        #  ULTRA-SPECIFIC PROMPT
+        suggestion_prompt = f"""Generate 3 follow-up questions for {PRODUCT_NAME} documentation.
+
+USER'S QUESTION: "{last_question}"
+
+DOCUMENTATION CONTEXT:
+{context}
+
+RULES:
+1. Extract SPECIFIC terms from the docs (e.g., "Kubiya agents", "webhook integration", "YAML config")
+2. Questions must be DIRECTLY related to topics in the context above
+3. Use patterns like:
+   - "How do I configure [specific feature from docs]?"
+   - "What are [specific concept from docs]?"
+   - "Can I integrate with [specific tool mentioned]?"
+4. Max 65 characters
+5. NO generic questions like "How to get started" or "Best practices"
+
+Return ONLY JSON array:
+["Specific question 1?", "Specific question 2?", "Specific question 3?"]
+
+IMPORTANT: Use actual terms from the documentation above!"""
+
         try:
-            json_match = re.search(r'\[.*\]', suggestions_raw, re.DOTALL | re.IGNORECASE)
+            suggestions_raw = llm(suggestion_prompt)
+            print(f"   🤖 LLM Response: {suggestions_raw[:200]}...")
+            
+            # Extract JSON
+            json_match = re.search(r'\[.*?\]', suggestions_raw, re.DOTALL)
             if json_match:
                 suggestion_list = json.loads(json_match.group(0))
             else:
-                raise ValueError("No JSON")
-        except:
-            # 🔥 BETTER FALLBACK - Extract key terms from docs
-            key_topics = []
-            for doc in relevant_docs[:3]:
-                # Extract technical terms, file names, commands
-                content = doc.page_content.lower()
-                # Check for common documentation topics
-                if 'agent' in content or 'workflow' in content:
-                    if 'agent' in content:
-                        key_topics.append('agents')
-                    if 'workflow' in content or 'workload' in content:
-                        key_topics.append('workflows')
-                    if 'quickstart' in content or 'get started' in content:
-                        key_topics.append('setup')
-                    if 'installation' in content:
-                        key_topics.append('install')
+                raise ValueError("No JSON found")
+                
+        except Exception as parse_error:
+            print(f"   ⚠️  JSON parsing failed: {parse_error}")
             
-            # Smart fallback based on actual docs
-            if key_topics:
-                topic = key_topics[0]
+            # 🔥 SMART FALLBACK - Extract real terms from docs
+            extracted_terms = []
+            for doc in relevant_docs[:4]:
+                content = doc.page_content
+                
+                # Extract technical terms (words in backticks, capitals, etc.)
+                # Look for common patterns
+                if '`' in content:
+                    # Extract code/technical terms
+                    code_terms = re.findall(r'`([^`]+)`', content)
+                    extracted_terms.extend([t for t in code_terms if len(t) < 25])
+                
+                # Extract capitalized multi-word terms
+                caps_terms = re.findall(r'\b[A-Z][a-z]+(?:\s+[A-Z][a-z]+)+\b', content)
+                extracted_terms.extend([t for t in caps_terms if len(t) < 30])
+            
+            # Remove duplicates, keep first 5
+            unique_terms = list(dict.fromkeys(extracted_terms))[:5]
+            
+            if len(unique_terms) >= 2:
                 suggestion_list = [
-                    f"How do I setup {topic}?",
-                    f"What are {topic} best practices?", 
-                    f"Common {topic} errors?"
+                    f"How do I use {unique_terms[0]}?",
+                    f"What is {unique_terms[1]}?",
+                    f"Configure {unique_terms[0]} settings?"
                 ]
             else:
+                # Last resort - use question keywords
+                words = last_question.lower().split()
+                key_word = next((w for w in words if len(w) > 4), PRODUCT_NAME)
                 suggestion_list = [
-                    "How do I get started with this?",
-                    "What are the next steps?",
-                    "Any common issues?"
+                    f"How to configure {key_word}?",
+                    f"Troubleshoot {key_word} issues?",
+                    f"Advanced {key_word} usage?"
                 ]
         
-        # Clean and validate
+        # Clean suggestions
         clean_suggestions = []
         for sug in suggestion_list[:3]:
-            if isinstance(sug, str) and len(sug.strip()) > 10 and len(sug) < 80 and '?' in sug:
+            if isinstance(sug, str) and 8 < len(sug.strip()) < 75 and '?' in sug:
                 clean_suggestions.append(sug.strip())
         
-        # Ensure exactly 3 good ones
+        # Ensure 3 suggestions
         while len(clean_suggestions) < 3:
-            clean_suggestions.append("How do I implement this?")
+            clean_suggestions.append(f"More about {PRODUCT_NAME}?")
         
         print(f"   ✅ Generated: {clean_suggestions}")
-        return jsonify({"suggestions": clean_suggestions})
+        return jsonify({"suggestions": clean_suggestions[:3]})
         
     except Exception as e:
-        print(f"   ❌ Suggestions error: {str(e)}")
-        return jsonify({"suggestions": ["How to setup?", "Best practices?", "Common issues?"]})
-
+        print(f"   ❌ Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"suggestions": [
+            "Tell me more?",
+            "How to implement?",
+            "Common issues?"
+        ]})
 
 if __name__ == '__main__':
     print("\n" + "="*60)

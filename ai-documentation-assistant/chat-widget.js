@@ -592,11 +592,12 @@
           <div class="docs-welcome">
             <h4>${USER_CONFIG.WELCOME_TITLE}</h4>
             <p>${USER_CONFIG.WELCOME_MESSAGE}</p>
-            <div class="docs-example-questions">
-              ${USER_CONFIG.EXAMPLE_QUESTIONS.map(q => 
-                `<button class="docs-example-btn" data-question="${q}">${q}</button>`
-              ).join('')}
-            </div>
+            <div class="docs-example-questions" id="example-questions-container">
+  <div class="docs-typing-dots" style="padding: 12px;">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+
           </div>
         </div>
         
@@ -887,6 +888,40 @@ function showSuggestions(suggestions) {
   scrollToBottom();
 }
 
+// 🔥 Load dynamic sample questions
+async function loadSampleQuestions() {
+  try {
+    const response = await fetch('http://localhost:5000/api/sample-questions');
+    const data = await response.json();
+    
+    const container = document.getElementById('example-questions-container');
+    if (container && data.questions) {
+      container.innerHTML = data.questions.map(q => 
+        `<button class="docs-example-btn" data-question="${escapeHtml(q)}">${q}</button>`
+      ).join('');
+      
+      // Add click handlers
+      container.querySelectorAll('.docs-example-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const question = btn.getAttribute('data-question');
+          input.value = question;
+          sendMessage();
+        });
+      });
+    }
+  } catch (error) {
+    // Fallback to default
+    const container = document.getElementById('example-questions-container');
+    if (container) {
+      container.innerHTML = USER_CONFIG.EXAMPLE_QUESTIONS.map(q => 
+        `<button class="docs-example-btn" data-question="${q}">${q}</button>`
+      ).join('');
+    }
+  }
+}
+
+// Load sample questions on init
+loadSampleQuestions();
 
     
     console.log('✅ AI Chat Widget loaded successfully!');
