@@ -328,8 +328,6 @@ Please follow PEP8 for Python and test locally before submitting.
 
 ---
 
----
-
 <div align="center">
 
 **Built by [Infrasity](https://infrasity.com)** — We help DevTools teams turn documentation into adoption engines.
